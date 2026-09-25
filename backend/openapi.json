@@ -202,6 +202,156 @@
         ]
       }
     },
+    "/v1/me/push-tokens": {
+      "post": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Register My Push Token",
+        "description": "Call after sign-in and whenever the token changes. Works before onboarding.",
+        "operationId": "register_my_push_token",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushTokenIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Remove My Push Token",
+        "description": "Call on sign-out so this phone stops getting your notifications.",
+        "operationId": "remove_my_push_token",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "title": "Token"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PushProvider",
+              "default": "expo"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/families": {
       "get": {
         "tags": [
@@ -612,6 +762,178 @@
           },
           "409": {
             "description": "Conflicts with the current state",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/families/{family_id}/pin": {
+      "put": {
+        "tags": [
+          "families"
+        ],
+        "summary": "Set Family Pin",
+        "description": "Organizer only. Typing this PIN on an elder's phone takes it out of elder mode.",
+        "operationId": "set_family_pin",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "family_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Family Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "families"
+        ],
+        "summary": "Clear Family Pin",
+        "description": "Organizer only. Without a PIN, phones leave elder mode only when the family disconnects\nthem.",
+        "operationId": "clear_family_pin",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "family_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Family Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2246,6 +2568,126 @@
         ]
       }
     },
+    "/v1/device/push-token": {
+      "post": {
+        "tags": [
+          "device"
+        ],
+        "summary": "Register Device Push Token",
+        "description": "Call after pairing and whenever the token changes.",
+        "operationId": "register_device_push_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushTokenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ]
+      }
+    },
+    "/v1/device/leave": {
+      "post": {
+        "tags": [
+          "device"
+        ],
+        "summary": "Leave Elder Mode",
+        "description": "Take this phone out of elder mode with the family PIN: the device is disconnected and\nits token stops working. Wrong PINs are limited per phone and per network address.",
+        "operationId": "leave_elder_mode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeaveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many failed attempts; see the Retry-After header",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ]
+      }
+    },
     "/v1/device/token/rotate": {
       "post": {
         "tags": [
@@ -2668,13 +3110,19 @@
           },
           "family": {
             "$ref": "#/components/schemas/FamilyRef"
+          },
+          "family_has_pin": {
+            "type": "boolean",
+            "title": "Family Has Pin",
+            "description": "Whether the family PIN can take this phone out of elder mode"
           }
         },
         "type": "object",
         "required": [
           "device",
           "elder",
-          "family"
+          "family",
+          "family_has_pin"
         ],
         "title": "DeviceMe"
       },
@@ -3175,6 +3623,11 @@
             ],
             "description": "Null until the family has an elder"
           },
+          "has_pin": {
+            "type": "boolean",
+            "title": "Has Pin",
+            "description": "Whether a family PIN is set (never the PIN itself)"
+          },
           "members": {
             "items": {
               "$ref": "#/components/schemas/MemberOut"
@@ -3197,6 +3650,7 @@
           "my_role",
           "created_at",
           "clock",
+          "has_pin",
           "members",
           "elders"
         ],
@@ -3415,6 +3869,24 @@
           "already_member"
         ],
         "title": "InvitePreview"
+      },
+      "LeaveIn": {
+        "properties": {
+          "pin": {
+            "type": "string",
+            "pattern": "^[0-9]{4,8}$",
+            "title": "Pin",
+            "description": "4 to 8 digits",
+            "examples": [
+              "2468"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "pin"
+        ],
+        "title": "LeaveIn"
       },
       "MeOut": {
         "properties": {
@@ -3796,6 +4268,24 @@
         "type": "object",
         "title": "PauseIn"
       },
+      "PinIn": {
+        "properties": {
+          "pin": {
+            "type": "string",
+            "pattern": "^[0-9]{4,8}$",
+            "title": "Pin",
+            "description": "4 to 8 digits",
+            "examples": [
+              "2468"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "pin"
+        ],
+        "title": "PinIn"
+      },
       "Problem": {
         "properties": {
           "type": {
@@ -3864,6 +4354,41 @@
         ],
         "title": "Problem",
         "description": "An error, as RFC 9457 problem details. Switch on `code`; `detail` is English for\ndevelopers. Some problems add fields (e.g. `errors`, `constraint`, `retry_after`)."
+      },
+      "PushProvider": {
+        "type": "string",
+        "enum": [
+          "expo",
+          "fcm",
+          "apns"
+        ],
+        "title": "PushProvider"
+      },
+      "PushTokenIn": {
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/PushProvider",
+            "default": "expo"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Token",
+            "examples": [
+              "ExponentPushToken[xxxxxxxx]"
+            ]
+          },
+          "platform": {
+            "$ref": "#/components/schemas/DevicePlatform"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "platform"
+        ],
+        "title": "PushTokenIn"
       },
       "ReadyOut": {
         "properties": {

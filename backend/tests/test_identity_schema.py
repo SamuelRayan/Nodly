@@ -242,6 +242,7 @@ async def test_pairing_invite_needs_an_elder(session: AsyncSession) -> None:
             family_id=family.id,
             kind=InviteKind.elder_pairing,
             code_hash=HASH,
+            created_at=NOW,
             expires_at=NOW + timedelta(minutes=15),
         )
     )
@@ -257,6 +258,7 @@ async def test_member_invite_must_not_name_an_elder(session: AsyncSession) -> No
             kind=InviteKind.member,
             elder_id=elder.id,
             code_hash=HASH,
+            created_at=NOW,
             expires_at=NOW + timedelta(hours=48),
         )
     )

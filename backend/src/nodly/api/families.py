@@ -9,6 +9,7 @@ from sqlalchemy import select, update
 
 from nodly.api.common import USER_AUTH_ERRORS, problems
 from nodly.api.schemas import FamilyDetail, FamilySummary, family_detail
+from nodly.api.types import FamilyPin
 from nodly.audit import record_audit
 from nodly.auth.access import MemberAccess, OrganizerAccess
 from nodly.auth.users import OnboardedUser
@@ -16,6 +17,7 @@ from nodly.clock import utcnow
 from nodly.db import SessionDep
 from nodly.errors import ConflictError, NotFoundError
 from nodly.models import ActorType, Family, FamilyMember, FamilyRole, Invite, InviteKind
+from nodly.security.pins import hash_pin
 
 router = APIRouter(prefix="/v1/families", tags=["families"])
 
@@ -32,6 +34,10 @@ class FamilyUpdate(BaseModel):
 
 class OrganizerTransfer(BaseModel):
     user_id: uuid.UUID = Field(description="A current member who becomes the organizer")
+
+
+class PinIn(BaseModel):
+    pin: FamilyPin
 
 
 class OrganizerMustTransferError(ConflictError):
@@ -155,6 +161,34 @@ async def transfer_organizer(
     )
     await session.commit()
     return await family_detail(session, access.family, FamilyRole.member)
+
+
+@router.put(
+    "/{family_id}/pin",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=problems(*USER_AUTH_ERRORS, 404, 422),
+)
+async def set_family_pin(body: PinIn, access: OrganizerAccess, session: SessionDep) -> Response:
+    """Organizer only. Typing this PIN on an elder's phone takes it out of elder mode."""
+    access.family.pin_hash = hash_pin(body.pin)
+    _audit(access.user.id, access.family.id, "family.pin_set", session)
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/{family_id}/pin",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=problems(*USER_AUTH_ERRORS, 404),
+)
+async def clear_family_pin(access: OrganizerAccess, session: SessionDep) -> Response:
+    """Organizer only. Without a PIN, phones leave elder mode only when the family disconnects
+    them."""
+    if access.family.pin_hash is not None:
+        access.family.pin_hash = None
+        _audit(access.user.id, access.family.id, "family.pin_cleared", session)
+        await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.delete(

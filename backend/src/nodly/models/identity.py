@@ -65,9 +65,15 @@ class ActorType(StrEnum):
 
 class Family(UUIDPrimaryKey, Timestamps, Base):
     __tablename__ = "families"
-    __table_args__ = (not_blank("name", 100),)
+    __table_args__ = (
+        not_blank("name", 100),
+        CheckConstraint("pin_hash IS NULL OR pin_hash LIKE 'scrypt$%'", name="pin_hash_format"),
+    )
 
     name: Mapped[str] = mapped_column(Text)
+    # The family PIN (organizer sets it) lets someone take a paired phone out of elder mode.
+    # scrypt, see nodly.security.pins. Null = no PIN; the family disconnects the phone instead.
+    pin_hash: Mapped[str | None] = mapped_column(Text)
 
 
 class User(UUIDPrimaryKey, Timestamps, Base):

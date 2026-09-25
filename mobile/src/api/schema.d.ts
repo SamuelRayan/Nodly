@@ -69,6 +69,30 @@ export interface paths {
         patch: operations["update_me"];
         trace?: never;
     };
+    "/v1/me/push-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register My Push Token
+         * @description Call after sign-in and whenever the token changes. Works before onboarding.
+         */
+        post: operations["register_my_push_token"];
+        /**
+         * Remove My Push Token
+         * @description Call on sign-out so this phone stops getting your notifications.
+         */
+        delete: operations["remove_my_push_token"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/families": {
         parameters: {
             query?: never;
@@ -132,6 +156,31 @@ export interface paths {
          */
         post: operations["transfer_organizer"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/families/{family_id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Family Pin
+         * @description Organizer only. Typing this PIN on an elder's phone takes it out of elder mode.
+         */
+        put: operations["set_family_pin"];
+        post?: never;
+        /**
+         * Clear Family Pin
+         * @description Organizer only. Without a PIN, phones leave elder mode only when the family disconnects
+         *     them.
+         */
+        delete: operations["clear_family_pin"];
         options?: never;
         head?: never;
         patch?: never;
@@ -466,6 +515,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/device/push-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register Device Push Token
+         * @description Call after pairing and whenever the token changes.
+         */
+        post: operations["register_device_push_token"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/device/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Leave Elder Mode
+         * @description Take this phone out of elder mode with the family PIN: the device is disconnected and
+         *     its token stops working. Wrong PINs are limited per phone and per network address.
+         */
+        post: operations["leave_elder_mode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/device/token/rotate": {
         parameters: {
             query?: never;
@@ -654,6 +744,11 @@ export interface components {
             device: components["schemas"]["DeviceOut"];
             elder: components["schemas"]["ElderOut"];
             family: components["schemas"]["FamilyRef"];
+            /**
+             * Family Has Pin
+             * @description Whether the family PIN can take this phone out of elder mode
+             */
+            family_has_pin: boolean;
         };
         /** DeviceOut */
         DeviceOut: {
@@ -815,6 +910,11 @@ export interface components {
             created_at: string;
             /** @description Null until the family has an elder */
             clock: components["schemas"]["FamilyClock"] | null;
+            /**
+             * Has Pin
+             * @description Whether a family PIN is set (never the PIN itself)
+             */
+            has_pin: boolean;
             /** Members */
             members: components["schemas"]["MemberOut"][];
             /** Elders */
@@ -933,6 +1033,15 @@ export interface components {
             expires_at: string;
             /** Already Member */
             already_member: boolean;
+        };
+        /** LeaveIn */
+        LeaveIn: {
+            /**
+             * Pin
+             * @description 4 to 8 digits
+             * @example 2468
+             */
+            pin: string;
         };
         /** MeOut */
         MeOut: {
@@ -1060,6 +1169,15 @@ export interface components {
              */
             until?: string | null;
         };
+        /** PinIn */
+        PinIn: {
+            /**
+             * Pin
+             * @description 4 to 8 digits
+             * @example 2468
+             */
+            pin: string;
+        };
         /**
          * Problem
          * @description An error, as RFC 9457 problem details. Switch on `code`; `detail` is English for
@@ -1088,6 +1206,22 @@ export interface components {
             request_id?: string | null;
         } & {
             [key: string]: unknown;
+        };
+        /**
+         * PushProvider
+         * @enum {string}
+         */
+        PushProvider: "expo" | "fcm" | "apns";
+        /** PushTokenIn */
+        PushTokenIn: {
+            /** @default expo */
+            provider: components["schemas"]["PushProvider"];
+            /**
+             * Token
+             * @example ExponentPushToken[xxxxxxxx]
+             */
+            token: string;
+            platform: components["schemas"]["DevicePlatform"];
         };
         /** ReadyOut */
         ReadyOut: {
@@ -1322,6 +1456,121 @@ export interface operations {
                 };
             };
             /** @description Invalid input (`validation_error`, `invalid_code`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    register_my_push_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushTokenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, `invalid_code`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    remove_my_push_token: {
+        parameters: {
+            query: {
+                token: string;
+                provider?: components["schemas"]["PushProvider"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -1639,6 +1888,140 @@ export interface operations {
             };
             /** @description Conflicts with the current state */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    set_family_pin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PinIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, `invalid_code`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    clear_family_pin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2874,6 +3257,104 @@ export interface operations {
             };
             /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    register_device_push_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushTokenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, `invalid_code`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    leave_elder_mode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflicts with the current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, `invalid_code`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many failed attempts; see the Retry-After header */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

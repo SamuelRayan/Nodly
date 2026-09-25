@@ -35,6 +35,14 @@ class CodeAttemptThrottle:
         self.per_ip = settings.throttle_max_failures_per_ip
         self.per_user = settings.throttle_max_failures_per_user
         self.global_ = settings.throttle_max_failures_global
+        self.per_device_pin = settings.throttle_max_pin_failures_per_device
+
+    def pin_limits(self, *, ip: str | None, device_id: object) -> list[Limit]:
+        """Wrong family PINs typed on an elder's phone (POST /v1/device/leave)."""
+        limits = [Limit(f"pin:device:{device_id}", self.per_device_pin)]
+        if ip:
+            limits.append(Limit(f"pin:ip:{ip}", self.per_ip))
+        return limits
 
     def limits(self, *, ip: str | None, user_id: object | None = None) -> list[Limit]:
         limits = [Limit("code:global", self.global_)]

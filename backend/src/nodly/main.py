@@ -7,7 +7,18 @@ import httpx
 from fastapi import FastAPI
 
 from nodly import __version__
-from nodly.api import dev, device, elders, families, health, invites, me, meta, pairing
+from nodly.api import (
+    dev,
+    device,
+    elders,
+    families,
+    health,
+    invites,
+    me,
+    meta,
+    pairing,
+    push_tokens,
+)
 from nodly.api.openapi import install_openapi, operation_id
 from nodly.auth.supabase import SupabaseTokenVerifier
 from nodly.config import Settings, get_settings
@@ -61,6 +72,7 @@ def create_app(
 
     app.include_router(health.router)
     app.include_router(me.router)
+    app.include_router(push_tokens.router)
     app.include_router(families.router)
     app.include_router(invites.router)
     app.include_router(elders.router)

@@ -69,6 +69,7 @@ class Settings(BaseSettings):
     throttle_max_failures_per_ip: int = Field(default=10, ge=1)
     throttle_max_failures_per_user: int = Field(default=10, ge=1)
     throttle_max_failures_global: int = Field(default=500, ge=1)
+    throttle_max_pin_failures_per_device: int = Field(default=5, ge=1)
 
     device_token_rotation_grace_seconds: float = Field(default=600.0, ge=0)
     device_last_seen_interval_seconds: float = Field(default=300.0, ge=0)

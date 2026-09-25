@@ -67,6 +67,7 @@ class FamilySummary(BaseModel):
 
 class FamilyDetail(FamilySummary):
     clock: FamilyClock | None = Field(description="Null until the family has an elder")
+    has_pin: bool = Field(description="Whether a family PIN is set (never the PIN itself)")
     members: list[MemberOut]
     elders: list[ElderOut]
 
@@ -145,6 +146,7 @@ async def family_detail(session: AsyncSession, family: Family, my_role: str) -> 
         my_role=FamilyRole(my_role),
         created_at=family.created_at,
         clock=FamilyClock(timezone=primary.timezone, elder_id=primary.id) if primary else None,
+        has_pin=family.pin_hash is not None,
         members=[
             MemberOut(
                 user_id=user.id,

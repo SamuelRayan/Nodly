@@ -44,6 +44,12 @@ LanguageTag = Annotated[
     Field(examples=["hi-IN"], description="BCP 47 language tag, e.g. hi, en-GB"),
 ]
 
+FamilyPin = Annotated[
+    str,
+    StringConstraints(pattern=r"^[0-9]{4,8}$"),
+    Field(examples=["2468"], description="4 to 8 digits"),
+]
+
 PhoneInput = Annotated[
     str,
     Field(max_length=32, examples=["+91 98765 43210"], description="Any format; stored as E.164"),

@@ -34,6 +34,7 @@ from nodly.security.credentials import (
     hash_code,
     hash_device_token,
 )
+from nodly.security.pins import hash_pin
 from tests.conftest import TEST_CODE_SECRET
 from tests.fake_supabase import FakeSupabase, SupabaseUser
 
@@ -198,15 +199,15 @@ def family_a(*, member: int, organizer: int) -> dict[str, int]:
     return {**onboarded(0), "outsider": 404, "member": member, "organizer": organizer}
 
 
-def device_only() -> dict[str, int]:
+def device_only(status: int = 200, *, other_device: int | None = None) -> dict[str, int]:
     return {
         **UNAUTHENTICATED,
         "not_onboarded": 401,
         "outsider": 401,
         "member": 401,
         "organizer": 401,
-        "device": 200,
-        "other_device": 200,
+        "device": status,
+        "other_device": status if other_device is None else other_device,
         "revoked_device": 401,
     }
 
@@ -259,6 +260,22 @@ async def fresh_device(world: World) -> dict[str, Any]:
     device_id, _ = await world.device(world.elder_a)
     await world.session.commit()
     return {"device_id": device_id}
+
+
+async def fresh_push_token(world: World) -> dict[str, Any]:
+    token = f"ExponentPushToken[{uuid.uuid4().hex}]"
+    return {"__body__": {"provider": "expo", "token": token, "platform": "android"}}
+
+
+async def pin_2468(world: World) -> dict[str, Any]:
+    family = await world.session.get_one(Family, world.family_a)
+    family.pin_hash = hash_pin("2468")
+    await world.session.commit()
+    return {"__body__": {"pin": "2468"}}
+
+
+async def _query(params: dict[str, str]) -> dict[str, Any]:
+    return {"__query__": params}
 
 
 async def transfer_target(world: World) -> dict[str, Any]:
@@ -345,6 +362,24 @@ CASES = [
     Case("POST", "/v1/pairing/claim", public(201), prepare=fresh_pairing_code),  # no login
     Case("GET", "/v1/device/me", device_only()),
     Case("POST", "/v1/device/token/rotate", device_only()),
+    Case("POST", "/v1/device/push-token", device_only(204), prepare=fresh_push_token),
+    # Family A has a PIN (2468); family B has none, so its device gets 409 no_family_pin.
+    Case("POST", "/v1/device/leave", device_only(204, other_device=409), prepare=pin_2468),
+    # push tokens & family PIN (Phase 3)
+    Case("POST", "/v1/me/push-tokens", signed_in(204), prepare=fresh_push_token),
+    Case(
+        "DELETE",
+        "/v1/me/push-tokens",
+        signed_in(204),
+        prepare=lambda world: _query({"token": "ExponentPushToken[gone]"}),
+    ),
+    Case(
+        "PUT",
+        "/v1/families/{family_id}/pin",
+        family_a(member=403, organizer=204),
+        body={"pin": "2468"},
+    ),
+    Case("DELETE", "/v1/families/{family_id}/pin", family_a(member=403, organizer=204)),
 ]
 
 
@@ -373,8 +408,13 @@ async def test_authorization(
         if case.prepare:
             values |= await case.prepare(world)
         body = values.pop("__body__", case.body)
+        query = values.pop("__query__", None)
         response = await client.request(
-            case.method, case.path.format(**values), headers=world.headers(role), json=body
+            case.method,
+            case.path.format(**values),
+            headers=world.headers(role),
+            json=body,
+            params=query,
         )
         assert response.status_code == case.expect[role], (
             f"{case.id} as {role}: {response.status_code} {response.text}"
