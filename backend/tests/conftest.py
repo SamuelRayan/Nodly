@@ -59,8 +59,16 @@ async def session(clean_db: AsyncEngine) -> AsyncIterator[AsyncSession]:
         yield session
 
 
+TEST_CODE_SECRET = "test-code-hash-secret-0123456789abcdef"
+
+
 def make_settings(database_url: str, **overrides: object) -> Settings:
-    values: dict[str, object] = {"env": "test", "database_url": database_url, **overrides}
+    values: dict[str, object] = {
+        "env": "test",
+        "database_url": database_url,
+        "code_hash_secret": TEST_CODE_SECRET,
+        **overrides,
+    }
     return Settings(_env_file=None, **values)  # type: ignore[call-arg, arg-type]
 
 

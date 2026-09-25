@@ -35,7 +35,12 @@ async def make_family_with_organizer(dev: httpx.AsyncClient) -> tuple[str, str]:
     user = await post(
         dev,
         "/dev/users",
-        {"email": "priya@example.com", "display_name": "Priya", "timezone": "Europe/London"},
+        {
+            "email": "priya@example.com",
+            "display_name": "Priya",
+            "timezone": "Europe/London",
+            "country_code": "GB",
+        },
     )
     await post(
         dev, f"/dev/families/{family['id']}/members", {"user_id": user["id"], "role": "organizer"}
@@ -54,7 +59,9 @@ async def test_dev_routes_are_not_mounted_outside_dev(client: httpx.AsyncClient)
 
 
 async def test_prod_hides_docs(test_database_url: str) -> None:
-    app = create_app(make_settings(test_database_url, env="prod"))
+    app = create_app(
+        make_settings(test_database_url, env="prod", supabase_url="https://example.supabase.co")
+    )
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         assert (await client.get("/docs")).status_code == 404
@@ -80,7 +87,7 @@ async def test_create_a_family_with_an_organizer_and_an_elder(
             "timezone": "Europe/London",
             "country_code": "gb",
             "phone": "020 7946 0958",
-            "locale": "en-GB",
+            "language": "en-GB",
         },
     )
     assert (user["email"], user["country_code"], user["phone_e164"]) == (
@@ -136,7 +143,12 @@ async def test_second_organizer_is_a_conflict(dev: httpx.AsyncClient) -> None:
     other = await post(
         dev,
         "/dev/users",
-        {"email": "arjun@example.com", "display_name": "Arjun", "timezone": "Asia/Kolkata"},
+        {
+            "email": "arjun@example.com",
+            "display_name": "Arjun",
+            "timezone": "Asia/Kolkata",
+            "country_code": "IN",
+        },
     )
     response = await dev.post(
         f"/dev/families/{family_id}/members", json={"user_id": other["id"], "role": "organizer"}
@@ -149,7 +161,12 @@ async def test_email_is_unique_ignoring_case(dev: httpx.AsyncClient) -> None:
     await make_family_with_organizer(dev)
     response = await dev.post(
         "/dev/users",
-        json={"email": "PRIYA@example.com", "display_name": "P2", "timezone": "Europe/London"},
+        json={
+            "email": "PRIYA@example.com",
+            "display_name": "P2",
+            "timezone": "Europe/London",
+            "country_code": "GB",
+        },
     )
     assert response.status_code == 409
     assert response.json()["constraint"] == "uq_users_email_lower"
@@ -213,13 +230,17 @@ async def test_elder_timezone_is_required(dev: httpx.AsyncClient) -> None:
     }
 
 
-async def test_user_phone_without_plus_needs_a_country(dev: httpx.AsyncClient) -> None:
+async def test_user_phone_without_plus_is_read_in_the_users_country(
+    dev: httpx.AsyncClient,
+) -> None:
+    # A UK number typed without +44 isn't valid when the user's country is the US.
     response = await dev.post(
         "/dev/users",
         json={
             "email": "a@example.com",
             "display_name": "A",
             "timezone": "UTC",
+            "country_code": "US",
             "phone": "020 7946 0958",
         },
     )

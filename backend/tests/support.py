@@ -1,5 +1,6 @@
 """Helpers shared by tests: running migrations and building rows."""
 
+from datetime import UTC, datetime
 from typing import Any
 
 from alembic import command
@@ -33,11 +34,15 @@ _user_count = 0
 async def make_user(session: AsyncSession, **fields: Any) -> User:
     global _user_count
     _user_count += 1
+    now = datetime.now(UTC)
     user = User(
         **{
             "email": f"user{_user_count}@example.com",
             "display_name": "Priya",
             "timezone": "Europe/London",
+            "country_code": "GB",
+            "age_confirmed_at": now,
+            "onboarded_at": now,
             **fields,
         }
     )

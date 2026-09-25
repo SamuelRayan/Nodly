@@ -80,19 +80,34 @@ class User(UUIDPrimaryKey, Timestamps, Base):
         CheckConstraint("timezone <> ''", name="timezone_not_empty"),
         matches("country_code", COUNTRY_CODE_PATTERN, "country_code", nullable=True),
         matches("phone_e164", E164_PATTERN, "phone_e164", nullable=True),
-        matches("locale", LOCALE_PATTERN, "locale", nullable=True),
+        matches("language", LOCALE_PATTERN, "language", nullable=True),
+        # Onboarding is done only with a name, timezone, country and the 16+ confirmation.
+        CheckConstraint(
+            "onboarded_at IS NULL OR (display_name IS NOT NULL AND timezone IS NOT NULL"
+            " AND country_code IS NOT NULL AND age_confirmed_at IS NOT NULL)",
+            name="onboarded_profile_complete",
+        ),
         Index("uq_users_email_lower", func.lower(text("email")), unique=True),
     )
 
-    # Filled when the account is linked to Supabase Auth (Phase 2).
+    # Supabase Auth user id (the JWT "sub"). Null only for users made by the /dev routes.
     auth_user_id: Mapped[uuid.UUID | None] = mapped_column(unique=True)
     email: Mapped[str] = mapped_column(Text)
-    display_name: Mapped[str] = mapped_column(Text)
-    # User-picked IANA name. Required, never defaulted (CLAUDE.md §5).
-    timezone: Mapped[str] = mapped_column(Text)
+    # Profile fields are filled during onboarding (PATCH /v1/me).
+    display_name: Mapped[str | None] = mapped_column(Text)
+    # User-picked IANA name. Required to finish onboarding, never defaulted (CLAUDE.md §5).
+    timezone: Mapped[str | None] = mapped_column(Text)
     country_code: Mapped[str | None] = mapped_column(String(2))
     phone_e164: Mapped[str | None] = mapped_column(Text)
-    locale: Mapped[str | None] = mapped_column(Text)
+    # BCP 47 language tag the app should use, e.g. "hi" or "en-GB".
+    language: Mapped[str | None] = mapped_column(Text)
+    # When the user confirmed they are 16 or older (CLAUDE.md §5).
+    age_confirmed_at: Mapped[datetime | None]
+    onboarded_at: Mapped[datetime | None]
+
+    @property
+    def is_onboarded(self) -> bool:
+        return self.onboarded_at is not None
 
 
 class FamilyMember(UUIDPrimaryKey, CreatedAt, Base):
@@ -119,12 +134,18 @@ class Elder(UUIDPrimaryKey, Timestamps, Base):
     __tablename__ = "elders"
     __table_args__ = (
         not_blank("display_name", 80),
+        not_blank("relation_label", 40),
+        not_blank("full_name", 120),
         CheckConstraint("timezone <> ''", name="timezone_not_empty"),
         matches("country_code", COUNTRY_CODE_PATTERN, "country_code"),
         matches("phone_e164", E164_PATTERN, "phone_e164", nullable=True),
-        matches("locale", LOCALE_PATTERN, "locale", nullable=True),
+        matches("language", LOCALE_PATTERN, "language", nullable=True),
         CheckConstraint("checkin_grace_minutes BETWEEN 0 AND 720", name="checkin_grace_minutes"),
         CheckConstraint("checkin_remind_at <= checkin_due_by", name="checkin_remind_before_due"),
+        CheckConstraint(
+            "paused_until IS NULL OR (paused_at IS NOT NULL AND paused_until > paused_at)",
+            name="paused_until_after_paused_at",
+        ),
         # The primary elder's timezone is the family clock (CLAUDE.md §5).
         Index(
             "uq_elders_one_primary_per_family",
@@ -137,14 +158,23 @@ class Elder(UUIDPrimaryKey, Timestamps, Base):
     family_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("families.id", ondelete="CASCADE"), index=True
     )
+    # What the family app shows ("Asha"); relation_label is how the family refers to them
+    # ("Mom", "Nani"); full_name is for recipe bylines later (CLAUDE.md §11).
     display_name: Mapped[str] = mapped_column(Text)
+    relation_label: Mapped[str | None] = mapped_column(Text)
+    full_name: Mapped[str | None] = mapped_column(Text)
     # User-picked IANA name. Required, never defaulted (CLAUDE.md §5).
     timezone: Mapped[str] = mapped_column(Text)
     # Required: the Help screen shows the emergency number for this country.
     country_code: Mapped[str] = mapped_column(String(2))
     phone_e164: Mapped[str | None] = mapped_column(Text)
-    locale: Mapped[str | None] = mapped_column(Text)
+    # BCP 47 language tag for the elder's app, e.g. "hi-IN".
+    language: Mapped[str | None] = mapped_column(Text)
     is_primary: Mapped[bool] = mapped_column(server_default=text("false"))
+    # Paused elders get no check-in reminders or missed-check-in alerts (Phase 4).
+    # Help is never paused. paused_until = null means "until someone resumes".
+    paused_at: Mapped[datetime | None]
+    paused_until: Mapped[datetime | None]
 
     # Check-in settings, local time in `timezone` (CLAUDE.md §7).
     checkin_remind_at: Mapped[time] = mapped_column(server_default=text("'09:00'"))
@@ -159,13 +189,27 @@ class ElderDevice(UUIDPrimaryKey, CreatedAt, Base):
     __tablename__ = "elder_devices"
     __table_args__ = (
         matches("token_hash", SHA256_HEX_PATTERN, "token_hash"),
+        matches("previous_token_hash", SHA256_HEX_PATTERN, "previous_token_hash", nullable=True),
+        CheckConstraint(
+            "(previous_token_hash IS NULL) = (previous_token_expires_at IS NULL)",
+            name="previous_token_has_expiry",
+        ),
         one_of("platform", DevicePlatform, "platform"),
+        Index(
+            "ix_elder_devices_previous_token_hash",
+            "previous_token_hash",
+            postgresql_where=text("previous_token_hash IS NOT NULL"),
+        ),
     )
 
     elder_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("elders.id", ondelete="CASCADE"), index=True
     )
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    # After a rotation the old token stays valid until previous_token_expires_at, so a
+    # lost response can't lock the phone out.
+    previous_token_hash: Mapped[str | None] = mapped_column(String(64))
+    previous_token_expires_at: Mapped[datetime | None]
     platform: Mapped[str] = mapped_column(Text)
     device_model: Mapped[str | None] = mapped_column(Text)
     app_version: Mapped[str | None] = mapped_column(Text)

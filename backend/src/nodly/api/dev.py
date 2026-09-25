@@ -13,35 +13,29 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 from pydantic_core import PydanticCustomError
 from sqlalchemy import select
 
-from nodly.api.types import CountryCode, TimezoneName
+from nodly.api.types import (
+    CountryCode,
+    DisplayName,
+    LanguageTag,
+    PhoneInput,
+    TimezoneName,
+    normalize_phone_field,
+)
 from nodly.audit import record_audit
 from nodly.clock import utcnow
 from nodly.db import SessionDep
-from nodly.errors import InvalidInputError, NotFoundError
+from nodly.errors import NotFoundError
 from nodly.jobs import queue
 from nodly.models import ActorType, Elder, Family, FamilyMember, FamilyRole, Job, JobStatus, User
-from nodly.models.base import LOCALE_PATTERN
-from nodly.services.phones import normalize_e164
 
 router = APIRouter(prefix="/dev", tags=["dev (ENV=dev only)"])
 
-Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
 Email = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True, to_lower=True, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
     ),
 ]
-Locale = Annotated[str, StringConstraints(max_length=35, pattern=LOCALE_PATTERN)]
-
-
-def _normalized_phone(phone: str | None, country: str | None) -> str | None:
-    if phone is None:
-        return None
-    try:
-        return normalize_e164(phone, country)
-    except InvalidInputError as exc:
-        raise PydanticCustomError(exc.code, exc.detail or exc.title) from exc
 
 
 # ---------------------------------------------------------------- schemas
@@ -62,29 +56,30 @@ class FamilyOut(ORMModel):
 
 
 class UserIn(BaseModel):
+    """A test user with a finished profile (no Supabase account: it can't sign in)."""
+
     email: Email = Field(examples=["priya@example.com"])
-    display_name: Name = Field(examples=["Priya"])
+    display_name: DisplayName = Field(examples=["Priya"])
     timezone: TimezoneName
-    country_code: CountryCode | None = None
-    phone: str | None = Field(
-        default=None, max_length=32, description="Any format; stored as E.164"
-    )
-    locale: Locale | None = Field(default=None, examples=["en-GB"])
+    country_code: CountryCode
+    phone: PhoneInput | None = None
+    language: LanguageTag | None = None
 
     @model_validator(mode="after")
     def _phone_to_e164(self) -> Self:
-        self.phone = _normalized_phone(self.phone, self.country_code)
+        self.phone = normalize_phone_field(self.phone, self.country_code)
         return self
 
 
 class UserOut(ORMModel):
     id: uuid.UUID
     email: str
-    display_name: str
-    timezone: str
+    display_name: str | None
+    timezone: str | None
     country_code: str | None
     phone_e164: str | None
-    locale: str | None
+    language: str | None
+    onboarded_at: datetime | None
     created_at: datetime
 
 
@@ -95,18 +90,18 @@ class MemberIn(BaseModel):
 
 class MemberOut(BaseModel):
     user_id: uuid.UUID
-    display_name: str
+    display_name: str | None
     email: str
     role: FamilyRole
     joined_at: datetime
 
 
 class ElderIn(BaseModel):
-    display_name: Name = Field(examples=["Mom"])
+    display_name: DisplayName = Field(examples=["Mom"])
     timezone: TimezoneName
     country_code: CountryCode = Field(description="Picks the emergency number on Help screens")
-    phone: str | None = Field(default=None, max_length=32, examples=["+91 98765 43210"])
-    locale: Locale | None = Field(default=None, examples=["hi-IN"])
+    phone: PhoneInput | None = None
+    language: LanguageTag | None = None
     is_primary: bool = Field(
         default=False, description="The primary elder's timezone is the family clock"
     )
@@ -121,7 +116,7 @@ class ElderIn(BaseModel):
             raise PydanticCustomError(
                 "reminder_after_due", "checkin_remind_at must not be after checkin_due_by"
             )
-        self.phone = _normalized_phone(self.phone, self.country_code)
+        self.phone = normalize_phone_field(self.phone, self.country_code)
         return self
 
 
@@ -132,7 +127,7 @@ class ElderOut(ORMModel):
     timezone: str
     country_code: str
     phone_e164: str | None
-    locale: str | None
+    language: str | None
     is_primary: bool
     checkin_remind_at: time
     checkin_due_by: time
@@ -243,13 +238,16 @@ async def get_family(family_id: uuid.UUID, session: SessionDep) -> FamilyDetailO
 
 @router.post("/users", status_code=status.HTTP_201_CREATED)
 async def create_user(body: UserIn, session: SessionDep) -> UserOut:
+    now = utcnow()
     user = User(
         email=body.email,
         display_name=body.display_name,
         timezone=body.timezone,
         country_code=body.country_code,
         phone_e164=body.phone,
-        locale=body.locale,
+        language=body.language,
+        age_confirmed_at=now,
+        onboarded_at=now,
     )
     session.add(user)
     await session.flush()
@@ -307,7 +305,7 @@ async def create_elder(family_id: uuid.UUID, body: ElderIn, session: SessionDep)
         timezone=body.timezone,
         country_code=body.country_code,
         phone_e164=body.phone,
-        locale=body.locale,
+        language=body.language,
         is_primary=body.is_primary,
         checkin_remind_at=body.checkin_remind_at,
         checkin_due_by=body.checkin_due_by,

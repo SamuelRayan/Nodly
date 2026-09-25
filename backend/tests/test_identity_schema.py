@@ -69,9 +69,23 @@ async def test_migrations_downgrade_to_base_and_back(engine: AsyncEngine) -> Non
 # ---------------------------------------------------------------- timezones are required
 
 
-async def test_user_timezone_is_required(session: AsyncSession) -> None:
-    session.add(User(email="no-tz@example.com", display_name="Arjun"))
-    await assert_not_null(session, "timezone")
+async def test_new_user_may_have_an_empty_profile(session: AsyncSession) -> None:
+    # Rows are created on the first GET /v1/me, before onboarding.
+    session.add(User(email="new@example.com"))
+    await session.flush()
+
+
+@pytest.mark.parametrize("missing", ["display_name", "timezone", "country_code", "age_confirmed"])
+async def test_onboarded_user_needs_a_complete_profile(session: AsyncSession, missing: str) -> None:
+    fields: dict[str, object] = {
+        "display_name": "Arjun",
+        "timezone": "Asia/Kolkata",
+        "country_code": "IN",
+        "age_confirmed_at": NOW,
+    }
+    fields.pop("age_confirmed_at" if missing == "age_confirmed" else missing)
+    session.add(User(email="arjun@example.com", onboarded_at=NOW, **fields))
+    await assert_violates(session, "ck_users_onboarded_profile_complete")
 
 
 async def test_elder_timezone_is_required(session: AsyncSession) -> None:

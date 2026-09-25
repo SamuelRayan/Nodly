@@ -17,6 +17,7 @@ from nodly.models.identity import (
     User,
 )
 from nodly.models.jobs import Job, JobStatus
+from nodly.models.throttle import ThrottleCounter
 
 __all__ = [
     "ActorType",
@@ -34,5 +35,6 @@ __all__ = [
     "JobStatus",
     "PushProvider",
     "PushToken",
+    "ThrottleCounter",
     "User",
 ]
