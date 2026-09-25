@@ -1,6 +1,6 @@
 # Progress
 
-## Phase 2 — Auth, families, invites, elder pairing ✅ (2026-09-25; real-user run pending, see below)
+## Phase 2 — Auth, families, invites, elder pairing ✅ (2026-09-25)
 
 ### Done
 - **Supabase project `nodly-dev`** (ref `hlfxdejxdbukuyekqrjc`, Mumbai, free plan), created through the connector. It uses ES256 signing keys, and its URL and publishable key are in `backend/.env`.
@@ -39,6 +39,11 @@
   - JWKS rotation and outage
   - code expiry, single use, throttling, token rotation grace, revocation
 - **Checked against the real project:** the running API fetched nodly-dev's JWKS, loaded its ES256 key, and rejected a token with a forged signature and one with an unknown key id.
+- **Real-user run (2026-09-25, 20:02 IST):** `samuelrayan10@gmail.com` signed in with the emailed code (a real ES256 token). `demo_flow.py` then went through onboarding, a family, an invite with preview, an elder, pairing a fake phone, and `GET /v1/device/me` as that phone. All steps passed.
+- **Your Supabase changes:**
+  - custom SMTP: codes are sent from your Gmail, and the email limit rose from 2/hour to 30/hour
+  - a code-only email template: "Your Nodly sign-in code", **8 digits**
+  - a password test user, `test2@nodly.dev`, added in the dashboard
 
 ### Decisions
 D33–D48 in [DECISIONS.md](DECISIONS.md). The main ones:
@@ -51,13 +56,7 @@ D33–D48 in [DECISIONS.md](DECISIONS.md). The main ones:
 - The first elder becomes primary automatically.
 
 ### Known issues / follow-ups
-- **The real-user run is still to do.** Supabase's built-in email hit its hourly limit during setup, after two sign-in links were opened by the browser first. To finish:
-  1. Run `& $py scripts/dev_login.py samuelrayan10@gmail.com` and click the link.
-  2. Run `& $py scripts/demo_flow.py --token <token> --timezone <yours> --country <yours>`, or use /docs (SETUP.md step 10).
-- **Email:**
-  - Built-in Supabase email sends only a few emails per hour, and only to project team addresses.
-  - Real users (and a second test member) need custom SMTP; that's a new provider, so it needs your OK.
-  - The Magic Link template needs `{{ .Token }}` for six-digit codes in the mobile app (Phase 3). The connector can't edit auth templates, so that's a dashboard change.
+- **Email is sent through personal Gmail SMTP.** That's fine for development, but production needs a transactional provider and a sending domain (Phase 16). Sign-in codes are 8 digits, so the app must accept 6–8.
 - **Auth settings:** the Site URL is still `http://localhost:3000`. Phase 3 needs the app's deep-link redirect URLs added.
 - **Free-plan projects pause after a week of inactivity**; restore them from the dashboard.
 - **Not enforced yet:** the 6-member free limit (Phase 7), account and family deletion (Phase 16).
