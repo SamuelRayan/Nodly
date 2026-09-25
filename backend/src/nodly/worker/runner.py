@@ -213,7 +213,8 @@ class Worker:
                 )
             except Exception as exc:
                 status = await self._fail(job, traceback.format_exc(), retry=True)
-                logger.warning(
+                logger.log(
+                    logging.ERROR if status is JobStatus.dead else logging.WARNING,
                     "job failed",
                     exc_info=exc,
                     extra={"outcome": status, "duration_ms": elapsed_ms()},
