@@ -16,6 +16,7 @@ from nodly.models.identity import (
     PushToken,
     User,
 )
+from nodly.models.jobs import Job, JobStatus
 
 __all__ = [
     "ActorType",
@@ -29,6 +30,8 @@ __all__ = [
     "FamilyRole",
     "Invite",
     "InviteKind",
+    "Job",
+    "JobStatus",
     "PushProvider",
     "PushToken",
     "User",
