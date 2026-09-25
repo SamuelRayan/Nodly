@@ -21,6 +21,30 @@ interface Item {
   detail?: string;
 }
 
+const FLAG = /^(?:\uD83C[\uDDE6-\uDDFF])+\s*/; // a leading flag emoji (regional indicator pair)
+
+/** How well an item matches a search: 0 the name starts with it, 1 a word does, 2 anywhere. */
+function rank(item: Item, needle: string): number {
+  const key = item.key.toLowerCase();
+  const label = item.label.toLowerCase();
+  if (key === needle || label.replace(FLAG, '').startsWith(needle)) {
+    return 0;
+  }
+  if (label.split(/[\s,()/_-]+/).some((word) => word.startsWith(needle))) {
+    return 1;
+  }
+  return label.includes(needle) || key.includes(needle) ? 2 : -1;
+}
+
+/** Items matching the search, best first (sort is stable, so ties keep their order). */
+function search(items: Item[], needle: string): Item[] {
+  return items
+    .map((item) => ({ item, rank: rank(item, needle) }))
+    .filter((match) => match.rank >= 0)
+    .sort((a, b) => a.rank - b.rank)
+    .map((match) => match.item);
+}
+
 /** A button that opens a searchable list in a full-screen modal. */
 function SearchPicker({
   label,
@@ -42,19 +66,15 @@ function SearchPicker({
   const { t } = useTranslation();
   const { colors, scale } = useTheme();
   const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const needle = search.trim().toLowerCase();
-  const matches = (item: Item) =>
-    !needle ||
-    item.label.toLowerCase().includes(needle) ||
-    item.key.toLowerCase().includes(needle);
+  const [query, setQuery] = useState('');
+  const needle = query.trim().toLowerCase();
   const shownPinned = needle ? [] : (pinned ?? []);
-  const data = [...shownPinned, ...items.filter(matches)];
+  const data = needle ? search(items, needle) : [...shownPinned, ...items];
 
   const choose = (key: string) => {
     onChange(key);
     setOpen(false);
-    setSearch('');
+    setQuery('');
   };
 
   return (
@@ -84,8 +104,8 @@ function SearchPicker({
             accessibilityLabel={t('pickers.search')}
             placeholder={t('pickers.search')}
             placeholderTextColor={colors.textMuted}
-            value={search}
-            onChangeText={setSearch}
+            value={query}
+            onChangeText={setQuery}
             autoFocus
             style={{
               minHeight: scale.buttonHeight,
