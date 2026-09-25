@@ -68,3 +68,50 @@ Format: **what** we decided, then *why*.
 - **D31. Tests build the schema with the real migrations**, check that models match migrations (autogenerate diff is empty), and do a downgrade/upgrade round trip.
 - **D32. The test database name must end in `_test`.** Tables are emptied with `DELETE` after each DB test, not wrapped in a rolled-back transaction.
   *Code under test can then commit and use several connections, like the worker does. `DELETE` is about 2× faster than `TRUNCATE` on near-empty tables.*
+
+## Phase 2 — Auth, families, invites, elder pairing (2026-09-25)
+
+### Sign-in (Supabase)
+- **D33. Only asymmetric Supabase tokens (ES256/RS256) are accepted.** They're checked against `<SUPABASE_URL>/auth/v1/.well-known/jwks.json`. The checks are: `iss = <SUPABASE_URL>/auth/v1`, `aud = authenticated`, `exp`/`iat` with 30s leeway, `role = authenticated`, `sub` is a UUID, and not `is_anonymous`. Symmetric keys in the JWKS are ignored, so HS256 and `alg: none` are always rejected. There is no support for the legacy shared JWT secret.
+  *Supabase itself marks the shared secret "not recommended"; asymmetric keys rotate without deploys. https://supabase.com/docs/guides/auth/signing-keys*
+- **D34. The JWKS is cached for 10 minutes.** A token with an unknown `kid` triggers an early refresh (key rotation). Fetches happen at most every 30s: during a Supabase outage the cached keys keep working, and with no keys at all requests fail fast with `503 auth_unavailable`. Without `SUPABASE_URL`, user endpoints answer `503 auth_not_configured`; staging/prod refuse to start without it.
+- **D35. Accounts are created on the first `GET /v1/me`, keyed by the token's `sub`** (`users.auth_user_id`). The email follows what Supabase reports. If the email already belongs to another row, the answer is `409 email_in_use`; we never link accounts by email.
+- **D36. Onboarding requires a display name, a user-picked timezone, a country and an "I'm 16 or older" confirmation** (`age_confirmed_at`). A DB CHECK enforces the full profile once `onboarded_at` is set. Every family endpoint answers `403 onboarding_required` until then. `locale` was renamed to `language` on users and elders.
+
+### Who can do what
+- **D37. Outsiders get 404 for anything in a family they don't belong to**, the same answer as an id that doesn't exist.
+  - **Organizer only:** rename the family, transfer the organizer role, remove a member, set the primary elder. The primary elder changes the family clock, and so billing days.
+  - **Any member:** invite, add/edit/pause elders, create pairing codes, list and revoke devices. Revoking is open to all because a lost phone is a safety issue.
+  - **Invites:** only their creator or the organizer can revoke one.
+  - **Leaving:** the organizer must transfer the role before leaving. A member who leaves or is removed has their open invites revoked.
+- **D38. The family's first elder becomes primary automatically.** The family clock is `null` until there's an elder.
+
+### Codes
+- **D39. Invite and pairing codes use Crockford base32.** Typing is forgiving: case, spaces and dashes are ignored and O/I/L are read as 0/1/1.
+  - Invites are 10 characters (50 bits), last 48 hours, and are shared as a link.
+  - Pairing codes are 8 characters (40 bits) and last 15 minutes. A new pairing code revokes that elder's older open codes.
+  - Codes are stored as **HMAC-SHA256 with `CODE_HASH_SECRET`**, namespaced by kind, and shown only once.
+  - Links and QR payloads are `INVITE_LINK_BASE_URL` / `PAIRING_QR_BASE_URL` + the code (`nodly://…` for now).
+- **D40. Answers for bad codes:** `422 invalid_code` (unknown), `410 code_expired`, `410 code_used` (used or cancelled). `409 already_member` doesn't use the code up. Previewing an invite doesn't use it either, and works before onboarding.
+- **D41. Brute-force protection counts failed code attempts** (claim, preview, accept) in Postgres fixed windows: per client IP, per signed-in user, and globally (10/10/500 per 15 minutes by default). Over the limit is `429` with `Retry-After`, even for a correct code.
+  - The global limit trades a brief pairing lockout during a flood for resistance to distributed guessing.
+  - Behind a proxy, uvicorn needs `--proxy-headers` so the IP is the client's.
+
+### Elder devices
+- **D42. A device token is `ndt_` + 256 random bits.** It's returned once by the claim and stored as SHA-256.
+  - It has its own OpenAPI scheme (DeviceToken) and works only on `/v1/device/*`, which take no elder or family ids. A device can only ever see its own elder. User tokens are rejected there, and device tokens on user endpoints.
+  - A revoked device gets `401 device_revoked`.
+  - `last_seen_at` is written at most every 5 minutes.
+- **D43. Token rotation keeps the token the phone presented valid for 10 minutes.** It's stored as `previous_token_hash`. A lost response, or a retry with the old token, can never lock the elder's phone out.
+- **D44. Pausing an elder (`paused_at`, optional `paused_until`) stops check-in reminders and missed-check-in alerts** (Phase 4). A pause past its `paused_until` has ended by itself. **Help is never paused** (Phase 5 must keep that).
+
+### API shape
+- **D45. OpenAPI:**
+  - `operationId`s are handler names (`create_family`); dev routes get a `dev_` prefix.
+  - Every 4xx/5xx is documented as `application/problem+json` with the `Problem` schema.
+  - `scripts/export_openapi.py` writes `backend/openapi.json` (never with `/dev`). A test fails if the committed file is stale.
+- **D46. Dependencies added (approved): `pyjwt[crypto]`.** It brings in `cryptography`.
+
+### Supabase project
+- **D47. The dev project is `nodly-dev`** (ref `hlfxdejxdbukuyekqrjc`, Mumbai `ap-south-1`, free plan). It's used only for Auth for now; the backend database stays local in dev. Production gets its own project, in a region chosen for its users.
+- **D48. `scripts/dev_login.py` catches the sign-in on `http://localhost:3000`**, Supabase's default Site URL: clicking the email link is enough. Emailed links work once; we learned that the hard way when the browser and the script raced for the same link.
