@@ -156,6 +156,13 @@ Format: **what** we decided, then *why*.
   The app can't change a channel's importance after creating it, so these levels are deliberate.
 - **D59. Every string goes through `t()`, and keys are typed from `en.json`**, so a missing key fails `tsc`. The elder's language comes from their profile (`elders.language`) and falls back to the phone's language, then English.
 - **D60. Devices reach the local API through `adb reverse`** (`npm run reverse`): `EXPO_PUBLIC_API_URL=http://localhost:8000` then works on every emulator and USB phone at once. Wi-Fi and tunnel setups are documented as alternatives.
+- **D62. Native builds happen in the cloud (EAS), never locally**, because this PC has 16 GB RAM and a local Gradle build plus an emulator plus Metro ran it out of memory.
+  - **Cloud builds only when native dependencies or `app.config.ts` change**; everything else is a Metro reload. Claude says before each cloud build, and why.
+  - **Budget:** the free plan has 15 Android builds a month (not carried over), a low-priority queue (about 9 minutes on average, up to ~45 at busy times) and a 45-minute build limit.
+  - **On the PC:** Metro plus one emulator at 1.5 GB with quick boot on. A second emulator only for batched two-device tests, shut down right after.
+  - **No `CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP`:** a stopped task beats a swapping PC.
+  - **Expo project:** `@samuelrayan/nodly` (id `a00f75c5-…`, in `app.config.ts`). EAS holds the Android signing key it generated.
+- **D63. Physical Samsung checks are deferred** until there's a Galaxy device (the list is in PROGRESS.md). Emulators cover everything else.
 - **D61. Dependencies added (approved):**
   - **New libraries:** `openapi-fetch`, `@react-native-community/netinfo`, `react-native-qrcode-svg` + `react-native-svg`, `expo-device`.
   - **Covered by the stack or Supabase's documented React Native setup:** `@supabase/supabase-js`, `react-native-url-polyfill`, `react-i18next`.

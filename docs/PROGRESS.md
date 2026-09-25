@@ -1,5 +1,22 @@
 # Progress
 
+## Deferred until I have a Galaxy device
+
+There's no Android phone for now: testing uses emulators, and these checks wait for a physical
+Samsung Galaxy. None of them blocks a phase.
+
+- **Phase 3:** run the app on a physical Samsung phone (the "run it on my Samsung" check), including pairing an elder phone and restarting it.
+- **Phase 3:** a push notification actually arriving on a real device, once Firebase is set up; emulator results can differ.
+- **Phase 7 and later:** Galaxy Store test purchases, which only work on a physical Galaxy signed into a Samsung account (CLAUDE.md §2).
+- **Phase 9 and later:** One UI checks: launcher flow, battery optimisation guidance, Samsung Music (§12), foldable and cover screens (§15).
+
+## Phase 3 — Mobile foundation (in progress)
+
+**How we work on this PC:**
+- Builds happen in the cloud with EAS, never locally.
+- Only one heavy thing runs at a time.
+- Details are in SETUP.md, "Low-memory workflow".
+
 ## Phase 2 — Auth, families, invites, elder pairing ✅ (2026-09-25)
 
 ### Done

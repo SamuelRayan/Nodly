@@ -195,6 +195,65 @@ with openapi-typescript. After that, run `npm run gen:api` in `mobile/`.
 The app is an Expo **development build**. It's a native app containing our modules, which
 loads its JavaScript from Metro on your PC. Expo Go can't run it.
 
+## Low-memory workflow (this PC: the default)
+
+The native app is **built in the cloud with EAS, never locally**; there are no local Gradle
+builds. On the PC, run **one heavy thing at a time**.
+
+**Close first:** browsers (Chrome/Edge with many tabs), Android Studio if open, Docker, games,
+video calls. Keep the API (`uvicorn`) running; it's light.
+
+**Normal work = Metro + ONE emulator (1.5 GB):**
+
+```powershell
+emulator -avd nodly_family -memory 1536                    # quick boot: resumes in seconds after the first time
+Set-Location $env:USERPROFILE\nodly\mobile
+npm run reverse                                            # device localhost:8000/8081 -> this PC
+npm start                                                  # Metro; the app reloads on every save
+```
+
+**Get the development build from the cloud** (only when there isn't one yet, or native code or
+`app.config.ts` changed; plain TS/TSX changes never need it):
+
+```powershell
+Set-Location $env:USERPROFILE\nodly\mobile
+npx eas-cli@latest build --profile development --platform android --no-wait   # queue it; prints a link
+npx eas-cli@latest build:list --platform android --limit 3                     # check its status
+npx eas-cli@latest build:run --platform android --latest                       # download + install on the running emulator
+```
+
+Or install a downloaded APK yourself:
+`& "$env:ANDROID_HOME\platform-tools\adb.exe" -s emulator-5554 install -r <path-to>.apk`.
+
+The free plan allows **15 Android builds a month** (not carried over), on a **low-priority
+queue**: waits have been 9 minutes on average and up to ~45 at busy times, plus about 10–20
+minutes of building, with a 45-minute limit per build. Batch native changes into one build.
+
+**Create the 1.5 GB emulators once** (Google Play image, quick boot on):
+
+```powershell
+foreach ($n in "nodly_family", "nodly_elder") {
+  avdmanager.bat create avd --name $n --device pixel_8 --package "system-images;android-36;google_apis_playstore;x86_64"
+  $ini = "$env:USERPROFILE\.android\avd\$n.avd\config.ini"
+  (Get-Content $ini | Where-Object { $_ -notmatch "^(hw\.ramSize|fastboot\.forceColdBoot|fastboot\.forceFastBoot)=" }) +
+    "hw.ramSize=1536", "fastboot.forceColdBoot=no", "fastboot.forceFastBoot=yes" | Set-Content $ini
+}
+```
+
+**Two-device tests (family + elder), batched into as few sessions as possible:** stop
+everything not needed, then start the second emulator. Shut it down as soon as the test is done.
+
+```powershell
+emulator -avd nodly_elder -memory 1536 -port 5556          # second window
+npm run reverse
+npx eas-cli@latest build:run --platform android --latest   # pick emulator-5556 when asked, or adb -s emulator-5556 install -r <apk>
+# ...test...
+& "$env:ANDROID_HOME\platform-tools\adb.exe" -s emulator-5556 emu kill
+```
+
+Claude Code stops background tasks when memory runs critically low. Keep that behaviour: a
+stopped task is better than a PC that swaps to a crawl.
+
 ## 13. Mobile tools (once per machine)
 
 ```powershell
@@ -233,6 +292,10 @@ features on or off* and restart. (Android Studio works too: `winget install Goog
 then use its SDK Manager and Device Manager instead.)
 
 ## 14. First run on an emulator
+
+> **On this PC, use the Low-memory workflow above instead.** `npx expo run:android` builds
+> locally with Gradle, which needs several GB of free RAM. The steps below are for machines
+> that have it.
 
 ```powershell
 Set-Location $env:USERPROFILE\nodly\mobile
@@ -283,6 +346,8 @@ Open Nodly on both; Metro serves them both.
 2. On the other, choose **"Someone set this up for me"** and scan the QR code or type the code.
 
 ## 16. Your Samsung phone (USB)
+
+> Deferred until there's a Galaxy device (see docs/PROGRESS.md). Kept here for then.
 
 1. **Developer options:** *Settings → About phone → Software information*, tap **Build number** seven times.
 2. **USB debugging:** *Settings → Developer options → USB debugging* on. Plug the phone in and accept the "Allow USB debugging?" prompt.
