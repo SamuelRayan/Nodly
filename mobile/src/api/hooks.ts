@@ -7,6 +7,7 @@ export const keys = {
   families: ['families'] as const,
   family: (id: string) => ['families', id] as const,
   invites: (familyId: string) => ['families', familyId, 'invites'] as const,
+  elder: (id: string) => ['elders', id] as const,
   devices: (elderId: string) => ['elders', elderId, 'devices'] as const,
   deviceMe: ['device', 'me'] as const,
 };
@@ -35,6 +36,14 @@ export function useInvites(familyId: string) {
           params: { path: { family_id: familyId } },
         }),
       ),
+  });
+}
+
+export function useElder(elderId: string) {
+  return useQuery({
+    queryKey: keys.elder(elderId),
+    queryFn: () =>
+      unwrap(api.GET('/v1/elders/{elder_id}', { params: { path: { elder_id: elderId } } })),
   });
 }
 

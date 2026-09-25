@@ -1,20 +1,20 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
-import { api, unwrap } from '@/api/client';
-import { useDevices } from '@/api/hooks';
+import { api, serverNow, unwrap } from '@/api/client';
+import { useDevices, useElder } from '@/api/hooks';
 import { Body, Button, ErrorNote, Loading, Screen, Title } from '@/components/ui';
 import { APP_NAME } from '@/config';
 import { useTheme } from '@/theme';
 
 function useSecondsLeft(until: string | undefined): number {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(serverNow);
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
+    const timer = setInterval(() => setNow(serverNow()), 1000);
     return () => clearInterval(timer);
   }, []);
   return until ? Math.max(0, Math.floor((new Date(until).getTime() - now) / 1000)) : 0;
@@ -25,11 +25,7 @@ export default function PairElder() {
   const { t } = useTranslation();
   const { colors, scale } = useTheme();
   const { elderId } = useLocalSearchParams<{ elderId: string }>();
-  const elder = useQuery({
-    queryKey: ['elders', elderId],
-    queryFn: () =>
-      unwrap(api.GET('/v1/elders/{elder_id}', { params: { path: { elder_id: elderId } } })),
-  });
+  const elder = useElder(elderId);
   const code = useMutation({
     mutationFn: () =>
       unwrap(
@@ -39,7 +35,7 @@ export default function PairElder() {
       ),
   });
   // When the current code was requested: a phone paired after that is "the" phone.
-  const [since, setSince] = useState(() => Date.now());
+  const [since, setSince] = useState(serverNow);
   const { mutate: newCode } = code;
   useEffect(() => {
     newCode();
@@ -101,7 +97,7 @@ export default function PairElder() {
             label={t('pairing.new_code')}
             busy={code.isPending}
             onPress={() => {
-              setSince(Date.now());
+              setSince(serverNow());
               code.mutate();
             }}
           />

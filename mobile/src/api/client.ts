@@ -14,7 +14,23 @@ import type { paths } from './schema';
  */
 export const api = createClient<paths>({ baseUrl: config.apiUrl });
 
+// A phone's clock can be off by seconds or minutes, so anything compared with a server timestamp
+// (like a code's expiry) uses the server's clock, estimated from the latest response's Date
+// header. The header has whole seconds, hence the +500 ms.
+let clockOffsetMs = 0;
+
+/** "Now" on the server's clock, in milliseconds. */
+export function serverNow(): number {
+  return Date.now() + clockOffsetMs;
+}
+
 api.use({
+  onResponse({ response }) {
+    const server = Date.parse(response.headers.get('date') ?? '');
+    if (!Number.isNaN(server)) {
+      clockOffsetMs = server + 500 - Date.now();
+    }
+  },
   async onRequest({ request }) {
     const { mode, deviceToken } = useAppStore.getState();
     if (mode === 'elder' && deviceToken) {

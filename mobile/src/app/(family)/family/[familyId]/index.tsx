@@ -1,9 +1,29 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { useFamily } from '@/api/hooks';
+import { useDevices, useFamily } from '@/api/hooks';
+import type { components } from '@/api/schema';
 import { useMe } from '@/auth/session';
 import { Body, Button, ErrorNote, Heading, Loading, Row, Screen } from '@/components/ui';
+
+function ElderRow({ elder }: { elder: components['schemas']['ElderOut'] }) {
+  const { t } = useTranslation();
+  const devices = useDevices(elder.id);
+  const connected = devices.data?.some((device) => !device.revoked_at);
+  let subtitle: string | undefined;
+  if (elder.pause.paused) {
+    subtitle = t('family.paused');
+  } else if (devices.isSuccess) {
+    subtitle = connected ? t('family.phone_connected') : t('family.phone_not_set_up');
+  }
+  return (
+    <Row
+      title={elder.relation_label ? `${elder.display_name} · ${elder.relation_label}` : elder.display_name}
+      subtitle={subtitle}
+      onPress={() => router.push({ pathname: '/elder/[elderId]', params: { elderId: elder.id } })}
+    />
+  );
+}
 
 /** One family: the clock, members and elders (placeholder layout). */
 export default function FamilyDetail() {
@@ -32,14 +52,7 @@ export default function FamilyDetail() {
       <Heading>{t('family.elders')}</Heading>
       {data.elders.length === 0 ? <Body muted>{t('family.no_elders')}</Body> : null}
       {data.elders.map((elder) => (
-        <Row
-          key={elder.id}
-          title={elder.relation_label ? `${elder.display_name} · ${elder.relation_label}` : elder.display_name}
-          subtitle={elder.pause.paused ? t('family.paused') : t('family.pair_phone')}
-          onPress={() =>
-            router.push({ pathname: '/elder/[elderId]/pair', params: { elderId: elder.id } })
-          }
-        />
+        <ElderRow key={elder.id} elder={elder} />
       ))}
       <Button
         label={t('family.add_elder')}

@@ -105,7 +105,19 @@
     "pin": "Family PIN",
     "clock": "Family clock: {{timezone}}",
     "pair_phone": "Set up their phone",
+    "phone_connected": "Phone connected",
+    "phone_not_set_up": "Phone not set up yet",
     "paused": "Check-ins paused"
+  },
+  "elderPhone": {
+    "heading": "Their phone",
+    "none": "No phone is connected for {{name}}.",
+    "unknown_model": "Phone",
+    "connected_since": "Connected {{when}}",
+    "disconnect": "Disconnect",
+    "confirm_title": "Disconnect this phone?",
+    "confirm_body": "{{name}}'s phone goes back to the welcome screen. You can set it up again with a new code.",
+    "pair_another": "Set up a new phone"
   },
   "createFamily": {
     "title": "Create a family",
