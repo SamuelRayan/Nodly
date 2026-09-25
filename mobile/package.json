@@ -12,7 +12,8 @@
     "check": "npm run typecheck && npm run lint && npm run gen:api:check",
     "gen:api": "npx --yes openapi-typescript@7.13.0 ../backend/openapi.json -o src/api/schema.d.ts",
     "gen:api:check": "node scripts/check-api-types.mjs",
-    "doctor": "expo-doctor"
+    "doctor": "expo-doctor",
+    "reverse": "node scripts/adb-reverse.mjs"
   },
   "dependencies": {
     "@react-native-community/netinfo": "12.0.1",

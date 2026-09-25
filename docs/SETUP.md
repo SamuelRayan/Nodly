@@ -186,7 +186,152 @@ Tests never call the real Supabase. A local fake signs tokens with its own key a
 ```
 
 Commit `backend/openapi.json` with any API change. The mobile app generates its types from it
-with openapi-typescript.
+with openapi-typescript. After that, run `npm run gen:api` in `mobile/`.
+
+---
+
+# Mobile app (Android first)
+
+The app is an Expo **development build**. It's a native app containing our modules, which
+loads its JavaScript from Metro on your PC. Expo Go can't run it.
+
+## 13. Mobile tools (once per machine)
+
+```powershell
+winget install --id OpenJS.NodeJS.LTS -e          # Node 20+ (this machine has 24)
+winget install --id Microsoft.OpenJDK.17 -e       # sets JAVA_HOME; Android builds need JDK 17
+```
+
+**Android SDK, without Android Studio.** Download the *command line tools only* for Windows
+from <https://developer.android.com/studio#command-line-tools-only>, check its SHA-256 against
+the page, then:
+
+```powershell
+$sdk = "$env:LOCALAPPDATA\Android\Sdk"
+Expand-Archive "$env:USERPROFILE\Downloads\commandlinetools-win-*_latest.zip" "$sdk\cmdline-tools\_x"
+Move-Item "$sdk\cmdline-tools\_x\cmdline-tools" "$sdk\cmdline-tools\latest"; Remove-Item "$sdk\cmdline-tools\_x"
+[Environment]::SetEnvironmentVariable("ANDROID_HOME", $sdk, "User")
+$p = [Environment]::GetEnvironmentVariable("Path", "User")
+[Environment]::SetEnvironmentVariable("Path", "$p;$sdk\platform-tools;$sdk\emulator;$sdk\cmdline-tools\latest\bin", "User")
+```
+
+Reopen PowerShell, then accept the licenses (piping `y` into a `.bat` doesn't work in
+PowerShell, so the answers come from a file) and install the packages:
+
+```powershell
+$sdk = $env:ANDROID_HOME
+Set-Content "$env:TEMP\yes.txt" (("y`r`n") * 30) -NoNewline
+cmd /c "sdkmanager.bat --licenses < `"$env:TEMP\yes.txt`""
+sdkmanager.bat "platform-tools" "emulator" "platforms;android-36" "build-tools;36.0.0" "system-images;android-36;google_apis_playstore;x86_64"
+avdmanager.bat create avd --name nodly_family --device pixel_8 --package "system-images;android-36;google_apis_playstore;x86_64"
+avdmanager.bat create avd --name nodly_elder  --device pixel_8 --package "system-images;android-36;google_apis_playstore;x86_64"
+emulator -accel-check          # must say "WHPX ... is installed and usable"
+```
+
+If acceleration isn't usable, turn on **Windows Hypervisor Platform** under *Turn Windows
+features on or off* and restart. (Android Studio works too: `winget install Google.AndroidStudio`,
+then use its SDK Manager and Device Manager instead.)
+
+## 14. First run on an emulator
+
+```powershell
+Set-Location $env:USERPROFILE\nodly\mobile
+npm install
+Copy-Item .env.example .env        # then paste the Supabase publishable key into it
+emulator -avd nodly_family         # leave this window open
+```
+
+In another window (with the API from step 7 running):
+
+```powershell
+Set-Location $env:USERPROFILE\nodly\mobile
+npm run reverse                    # the device's localhost:8000/8081 -> this PC
+npx expo run:android               # first time: builds the app (~10+ minutes), installs it, starts Metro
+```
+
+Next time, start Metro with `npm start` and open **Nodly** on the device. Rebuild with
+`npx expo run:android` only after native changes: a new native package, or `app.config.ts`.
+
+### Reaching the local backend
+
+| Device | `EXPO_PUBLIC_API_URL` in `mobile/.env` | Also needed |
+|---|---|---|
+| Emulator or USB phone (recommended) | `http://localhost:8000` | `npm run reverse` after each device connects or boots |
+| Emulator without reverse | `http://10.0.2.2:8000` | nothing |
+| Phone on the same Wi-Fi | `http://<PC's LAN IP>:8000` | API started with `--host 0.0.0.0`, Metro with `npx expo start --dev-client --lan`, and a firewall rule (below) |
+| Anywhere | a tunnel's https URL | e.g. `winget install Cloudflare.cloudflared`, then `cloudflared tunnel --url http://localhost:8000` |
+
+Firewall rule for Wi-Fi testing (admin PowerShell, private networks only):
+
+```powershell
+New-NetFirewallRule -DisplayName "Nodly dev (API + Metro)" -Direction Inbound -Protocol TCP -LocalPort 8000,8081 -Action Allow -Profile Private
+```
+
+`EXPO_PUBLIC_*` values are built in when Metro bundles, so restart Metro after editing `.env`.
+Development builds allow plain `http://`; store builds will use HTTPS.
+
+## 15. Two devices: family + elder
+
+```powershell
+emulator -avd nodly_elder -port 5556          # a second emulator next to nodly_family
+npm run reverse                               # covers every connected device
+& "$env:ANDROID_HOME\platform-tools\adb.exe" -s emulator-5556 install -r android\app\build\outputs\apk\debug\app-debug.apk
+```
+
+Open Nodly on both; Metro serves them both.
+1. On one device, choose **"I'm setting Nodly up for someone"**. Sign in with the emailed code, finish your profile, create a family, add an elder, and a pairing code appears.
+2. On the other, choose **"Someone set this up for me"** and scan the QR code or type the code.
+
+## 16. Your Samsung phone (USB)
+
+1. **Developer options:** *Settings → About phone → Software information*, tap **Build number** seven times.
+2. **USB debugging:** *Settings → Developer options → USB debugging* on. Plug the phone in and accept the "Allow USB debugging?" prompt.
+3. Check it's connected: `& "$env:ANDROID_HOME\platform-tools\adb.exe" devices` shows it as `device`.
+4. `npm run reverse`, then `npx expo run:android --device` and pick the phone. Or install the APK built in step 14 with `adb -s <serial> install -r android\app\build\outputs\apk\debug\app-debug.apk`.
+
+One UI's battery optimisation can stop Metro reconnecting in the background; reopen the app if
+it shows a red "could not connect" screen.
+
+## 17. EAS development build (cloud, installable from a link)
+
+For phones that aren't plugged in, or to build without the local SDK:
+
+```powershell
+npx eas-cli@latest login                     # your Expo account
+npx eas-cli@latest init                      # links the project; prints the EAS project id
+```
+
+Put that id in `mobile/.env` as `EAS_PROJECT_ID=...`. Push tokens need it too. Then:
+
+```powershell
+npx eas-cli@latest build --profile development --platform android
+```
+
+When it finishes, open the link or QR code on the phone to install. Start Metro with `npm start`
+and the app connects to it (same Wi-Fi, or USB + `npm run reverse`).
+
+## 18. Push notifications (Android, FCM)
+
+Expo push tokens on Android need a Firebase project. Until it's set up, the app works but
+doesn't register for push.
+
+1. In the Firebase console, create a project and **add an Android app** with package `com.nodlyapp.nodly`.
+2. Download **google-services.json** and save it as `mobile/google-services.json`. It's git-ignored; never commit it.
+3. Add `GOOGLE_SERVICES_JSON=./google-services.json` to `mobile/.env`, then rebuild with `npx expo run:android`.
+4. For EAS builds, add it on expo.dev as a **secret file** environment variable named `GOOGLE_SERVICES_JSON`.
+5. So the server can send pushes, upload an FCM V1 service-account key: `npx eas-cli@latest credentials` → Android → Google Service Account → FCM V1 (<https://docs.expo.dev/push-notifications/fcm-credentials/>).
+
+The app creates four Android notification channels: `checkin`, `moments`, `help_alerts`
+(maximum importance, may bypass Do Not Disturb) and `general`. You can see them in the
+phone's app notification settings.
+
+## 19. Mobile checks
+
+```powershell
+Set-Location $env:USERPROFILE\nodly\mobile
+npm run check        # tsc --noEmit + expo lint + API types up to date with backend/openapi.json
+npx expo-doctor      # dependency/config health
+```
 
 ## Troubleshooting
 
@@ -201,6 +346,10 @@ with openapi-typescript.
 | `email rate limit exceeded` from dev_login | Supabase's built-in email sends only a few emails per hour (and only to your project team's addresses). Wait, or add a user with a password in the dashboard (*Authentication → Users → Add user*, auto-confirm) and use `--password`. |
 | `Email link is invalid or has expired` | Sign-in links work once. If you already clicked it (or used `--link`), request a new one. |
 | `503 auth_unavailable` | The API can't reach `<SUPABASE_URL>/auth/v1/.well-known/jwks.json`: check the URL and your internet connection. |
+| App shows "Can't reach Nodly right now" | Is the API running? Then run `npm run reverse` again (needed after every device boot) and check `EXPO_PUBLIC_API_URL`. |
+| `sdkmanager`: "Java version 17 or higher is required" | This window predates `JAVA_HOME`. Reopen PowerShell, or set `$env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-17.0.20.101-hotspot"`. |
+| Red "Unable to load script" screen | Metro isn't running or isn't reachable: `npm start`, and `npm run reverse` for 8081. |
+| `.gitignore` / "android folder" questions | `mobile/android` and `mobile/ios` are generated (`npx expo prebuild`) and git-ignored. Never edit them by hand. |
 
 ## Using conda activate (optional)
 
