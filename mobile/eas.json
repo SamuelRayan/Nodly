@@ -7,6 +7,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "environment": "development",
       "android": {
         "buildType": "apk"
       },
@@ -16,6 +17,7 @@
     },
     "galaxy": {
       "distribution": "store",
+      "environment": "production",
       "autoIncrement": true,
       "android": {
         "buildType": "apk"
@@ -26,6 +28,7 @@
     },
     "play": {
       "distribution": "store",
+      "environment": "production",
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
@@ -36,6 +39,7 @@
     },
     "ios": {
       "distribution": "store",
+      "environment": "production",
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_STORE": "ios"
