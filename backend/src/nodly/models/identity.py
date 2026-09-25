@@ -176,6 +176,10 @@ class Elder(UUIDPrimaryKey, Timestamps, Base):
     paused_at: Mapped[datetime | None]
     paused_until: Mapped[datetime | None]
 
+    def is_paused(self, now: datetime) -> bool:
+        """Paused right now; a pause whose paused_until has passed has ended by itself."""
+        return self.paused_at is not None and (self.paused_until is None or self.paused_until > now)
+
     # Check-in settings, local time in `timezone` (CLAUDE.md §7).
     checkin_remind_at: Mapped[time] = mapped_column(server_default=text("'09:00'"))
     checkin_due_by: Mapped[time] = mapped_column(server_default=text("'12:00'"))

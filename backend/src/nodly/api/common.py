@@ -1,8 +1,24 @@
 """Schemas and helpers shared by the /v1 routers."""
 
-from typing import Any
+from typing import Annotated, Any
 
+from fastapi import Depends, Request
 from pydantic import BaseModel, ConfigDict, Field
+
+from nodly.config import Settings
+
+
+def app_settings(request: Request) -> Settings:
+    return request.app.state.settings  # type: ignore[no-any-return]
+
+
+SettingsDep = Annotated[Settings, Depends(app_settings)]
+
+
+def client_ip(request: Request) -> str | None:
+    """The caller's IP. Behind a proxy, uvicorn's --proxy-headers must be on for this to be
+    the real client rather than the proxy."""
+    return request.client.host if request.client else None
 
 
 class ORMModel(BaseModel):
@@ -30,6 +46,7 @@ _DESCRIPTIONS = {
     403: "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
     404: "Not found, or not visible to you",
     409: "Conflicts with the current state",
+    410: "The code has expired or was already used (`code_expired`, `code_used`)",
     422: "Invalid input (`validation_error`, `invalid_code`, ...)",
     429: "Too many failed attempts; see the Retry-After header",
     503: "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",

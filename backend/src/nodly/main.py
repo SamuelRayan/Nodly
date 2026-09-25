@@ -7,7 +7,7 @@ import httpx
 from fastapi import FastAPI
 
 from nodly import __version__
-from nodly.api import dev, health, me, meta
+from nodly.api import dev, families, health, invites, me, meta
 from nodly.auth.supabase import SupabaseTokenVerifier
 from nodly.config import Settings, get_settings
 from nodly.constants import APP_NAME
@@ -57,6 +57,8 @@ def create_app(
 
     app.include_router(health.router)
     app.include_router(me.router)
+    app.include_router(families.router)
+    app.include_router(invites.router)
     app.include_router(meta.router)
     if settings.env == "dev":
         app.include_router(dev.router)
