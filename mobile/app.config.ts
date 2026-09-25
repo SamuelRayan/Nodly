@@ -5,12 +5,16 @@ const store = process.env.EXPO_PUBLIC_STORE ?? 'galaxy';
 // Permanent once uploaded to a store. com.nodlyapp.nodly: unused on Google Play and not tied to
 // a domain someone else owns (docs/DECISIONS.md D49).
 const APP_ID = 'com.nodlyapp.nodly';
+// EAS project @samuelrayan/nodly (npx eas-cli@latest init). Not a secret; builds and Expo push
+// tokens need it.
+const EAS_PROJECT_ID = 'a00f75c5-4eed-45ad-b6af-f3e5191372ff';
 // Firebase config for Android push (FCM), never committed: a path in mobile/.env locally, an
 // EAS "file" environment variable in cloud builds (docs/SETUP.md). Without it, push is off.
 const googleServicesFile = process.env.GOOGLE_SERVICES_JSON;
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
+  owner: 'samuelrayan',
   name: 'Nodly',
   slug: 'nodly',
   scheme: 'nodly',
@@ -59,6 +63,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     store,
-    eas: process.env.EAS_PROJECT_ID ? { projectId: process.env.EAS_PROJECT_ID } : undefined,
+    eas: { projectId: EAS_PROJECT_ID },
   },
 });
