@@ -240,8 +240,15 @@ foreach ($n in "nodly_family", "nodly_elder") {
 }
 ```
 
+**Open the app on an emulator** (the development build connects to Metro on this PC):
+
+```powershell
+& "$env:ANDROID_HOME\platform-tools\adb.exe" -s emulator-5554 shell am start -a android.intent.action.VIEW -d "'exp+nodly://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081'" com.nodlyapp.nodly
+```
+
 **Two-device tests (family + elder), batched into as few sessions as possible:** stop
 everything not needed, then start the second emulator. Shut it down as soon as the test is done.
+If free RAM is under ~5 GB, run the two emulators one after the other instead (section 15).
 
 ```powershell
 emulator -avd nodly_elder -memory 1536 -port 5556          # second window
@@ -336,14 +343,31 @@ Development builds allow plain `http://`; store builds will use HTTPS.
 ## 15. Two devices: family + elder
 
 ```powershell
-emulator -avd nodly_elder -port 5556          # a second emulator next to nodly_family
-npm run reverse                               # covers every connected device
-& "$env:ANDROID_HOME\platform-tools\adb.exe" -s emulator-5556 install -r android\app\build\outputs\apk\debug\app-debug.apk
+emulator -avd nodly_elder -memory 1536 -port 5556   # the second emulator
+npm run reverse                                     # covers every connected device
+& "$env:ANDROID_HOME\platform-tools\adb.exe" -s emulator-5556 install -r <the EAS development APK>
 ```
 
 Open Nodly on both; Metro serves them both.
-1. On one device, choose **"I'm setting Nodly up for someone"**. Sign in with the emailed code, finish your profile, create a family, add an elder, and a pairing code appears.
-2. On the other, choose **"Someone set this up for me"** and scan the QR code or type the code.
+1. On one device, choose **"I'm setting Nodly up for someone"**. Sign in with the emailed code, finish your profile, create a family, add an elder, and a pairing code appears (15 minutes).
+2. On the other, choose **"Someone set this up for me"** and scan the QR code or type the code (dashes and case don't matter).
+
+**Not enough RAM for two emulators?** Run them one after the other. Pairing goes through the
+server, so the family phone doesn't have to be running while the elder phone pairs: show the
+code, shut `nodly_family` down (`adb -s emulator-5554 emu kill`), start `nodly_elder`, and type
+the code. The family phone shows the elder's phone as connected when you start it again. With
+under ~5 GB free, this is the better choice: each emulator process uses about 3 GB on its own.
+
+What to check (Phase 3 did all of these):
+
+| Where | Do | Expect |
+|---|---|---|
+| Family | Restart the app | Still signed in, family list |
+| Elder | Pair, then restart the app | The elder home ("Hello, …", **I'm okay**) |
+| Elder | **This phone**, no family PIN set | "Ask your family to disconnect this phone" |
+| Family | Elder → **Disconnect** | The elder phone goes back to Welcome with "Your family disconnected this phone" |
+| Family | **Family PIN** → set one | — |
+| Elder | **This phone** → wrong PIN, then the right one | "That PIN isn't right", then Welcome with "This phone is no longer in elder mode" |
 
 ## 16. Your Samsung phone (USB)
 
@@ -352,43 +376,76 @@ Open Nodly on both; Metro serves them both.
 1. **Developer options:** *Settings → About phone → Software information*, tap **Build number** seven times.
 2. **USB debugging:** *Settings → Developer options → USB debugging* on. Plug the phone in and accept the "Allow USB debugging?" prompt.
 3. Check it's connected: `& "$env:ANDROID_HOME\platform-tools\adb.exe" devices` shows it as `device`.
-4. `npm run reverse`, then `npx expo run:android --device` and pick the phone. Or install the APK built in step 14 with `adb -s <serial> install -r android\app\build\outputs\apk\debug\app-debug.apk`.
+4. `npm run reverse`, then install the EAS development build: open its link on the phone, or `adb -s <serial> install -r <the APK>`.
 
 One UI's battery optimisation can stop Metro reconnecting in the background; reopen the app if
 it shows a red "could not connect" screen.
 
 ## 17. EAS development build (cloud, installable from a link)
 
-For phones that aren't plugged in, or to build without the local SDK:
+This is how every native build is made on this PC (see the Low-memory workflow). The project is
+already linked: `@samuelrayan/nodly`, with its project id written in `mobile/app.config.ts`
+(push tokens need it). On a new machine, just log in:
 
 ```powershell
 npx eas-cli@latest login                     # your Expo account
-npx eas-cli@latest init                      # links the project; prints the EAS project id
-```
-
-Put that id in `mobile/.env` as `EAS_PROJECT_ID=...`. Push tokens need it too. Then:
-
-```powershell
+npx eas-cli@latest whoami
 npx eas-cli@latest build --profile development --platform android
 ```
 
-When it finishes, open the link or QR code on the phone to install. Start Metro with `npm start`
-and the app connects to it (same Wi-Fi, or USB + `npm run reverse`).
+When it finishes, open the link or QR code on the phone to install, or use `build:run` for an
+emulator. Start Metro with `npm start` and the app connects to it (same Wi-Fi, or USB +
+`npm run reverse`).
 
 ## 18. Push notifications (Android, FCM)
 
 Expo push tokens on Android need a Firebase project. Until it's set up, the app works but
-doesn't register for push.
+doesn't register for push. Done for the dev project (Firebase project `nodly-7b90c`); these are
+the steps to redo it. Docs: <https://docs.expo.dev/push-notifications/fcm-credentials/>.
 
-1. In the Firebase console, create a project and **add an Android app** with package `com.nodlyapp.nodly`.
-2. Download **google-services.json** and save it as `mobile/google-services.json`. It's git-ignored; never commit it.
-3. Add `GOOGLE_SERVICES_JSON=./google-services.json` to `mobile/.env`, then rebuild with `npx expo run:android`.
-4. For EAS builds, add it on expo.dev as a **secret file** environment variable named `GOOGLE_SERVICES_JSON`.
-5. So the server can send pushes, upload an FCM V1 service-account key: `npx eas-cli@latest credentials` → Android → Google Service Account → FCM V1 (<https://docs.expo.dev/push-notifications/fcm-credentials/>).
+**The app side (google-services.json).** The repo will be public, so this file never goes in git.
 
-The app creates four Android notification channels: `checkin`, `moments`, `help_alerts`
-(maximum importance, may bypass Do Not Disturb) and `general`. You can see them in the
-phone's app notification settings.
+1. In the Firebase console, open the project and **add an Android app** with package `com.nodlyapp.nodly`.
+2. Download **google-services.json** into `mobile/`. It's git-ignored.
+3. Local runs read it through `GOOGLE_SERVICES_JSON=./google-services.json` in `mobile/.env`.
+4. Cloud builds get it from a secret **file** environment variable on EAS:
+
+   ```powershell
+   Set-Location $env:USERPROFILE\nodly\mobile
+   npx eas-cli@latest env:set --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json --visibility secret --environment development --environment production --non-interactive
+   npx eas-cli@latest env:list --environment development    # shows GOOGLE_SERVICES_JSON (file, secret)
+   ```
+
+   Changing the file needs a new cloud build.
+
+**The server side (FCM V1 key)**, so Expo's push service may send through FCM:
+
+1. Firebase console → **Project settings → Service accounts → Generate new private key**. Save
+   the JSON **outside the repo** (e.g. `C:\Users\HP\secrets\nodly-fcm.json`). It's a real secret.
+2. Upload it to EAS: `npx eas-cli@latest credentials -p android` → **development** →
+   **Google Service Account** → **Manage your Google Service Account Key for Push Notifications
+   (FCM V1)** → **Set up …** → **Upload a new service account key** → the path from step 1.
+   (Or on expo.dev: project **nodly** → **Credentials** → Android `com.nodlyapp.nodly` → **FCM
+   V1 service account key** → Add.)
+
+**Check it works.** Sign in on the emulator and allow notifications; the API logs
+`POST /v1/me/push-tokens 204` (an elder phone: `POST /v1/device/push-token`). Take the token
+from the `push_tokens` table and send a test:
+
+```powershell
+$body = '[{"to":"ExponentPushToken[...]","title":"Nodly test","body":"Push works.","channelId":"general"}]'
+Invoke-RestMethod -Method Post -Uri https://exp.host/--/api/v2/push/send -ContentType "application/json" -Body $body
+```
+
+The ticket says `status: ok` and the notification appears. `InvalidCredentials` means the FCM V1
+key is missing or wrong. Tickets only mean "accepted"; the receipt
+(`POST https://exp.host/--/api/v2/push/getReceipts` with `{"ids":["<ticket id>"]}`) confirms
+delivery to FCM.
+
+The app creates four Android notification channels: `checkin` (high), `moments` (default),
+`help_alerts` (maximum importance, may bypass Do Not Disturb) and `general` (default). You can
+see them in the phone's app notification settings, or with
+`adb shell dumpsys notification | Select-String "mId='(checkin|moments|help_alerts|general)'"`.
 
 ## 19. Mobile checks
 
@@ -411,7 +468,9 @@ npx expo-doctor      # dependency/config health
 | `email rate limit exceeded` from dev_login | Supabase's built-in email sends only a few emails per hour (and only to your project team's addresses). Wait, or add a user with a password in the dashboard (*Authentication → Users → Add user*, auto-confirm) and use `--password`. |
 | `Email link is invalid or has expired` | Sign-in links work once. If you already clicked it (or used `--link`), request a new one. |
 | `503 auth_unavailable` | The API can't reach `<SUPABASE_URL>/auth/v1/.well-known/jwks.json`: check the URL and your internet connection. |
-| App shows "Can't reach Nodly right now" | Is the API running? Then run `npm run reverse` again (needed after every device boot) and check `EXPO_PUBLIC_API_URL`. |
+| App shows "Can't reach Nodly right now" | Is the API running? Then run `npm run reverse` again (needed after every device boot; on a fresh first boot the rules can vanish a minute later, so check with `adb -s <serial> reverse --list`) and check `EXPO_PUBLIC_API_URL`. |
+| Saved files don't reach the app; Metro says "reloads are disabled" | Metro was started with `CI=1`, which turns off file watching. Start it with plain `npm start`. |
+| `tsc` rejects a route that exists (e.g. `'/signin/verify'`) | The typed routes in `.expo/types` are generated by Metro. Start (or restart) Metro once, then run `tsc` again. |
 | `sdkmanager`: "Java version 17 or higher is required" | This window predates `JAVA_HOME`. Reopen PowerShell, or set `$env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-17.0.20.101-hotspot"`. |
 | Red "Unable to load script" screen | Metro isn't running or isn't reachable: `npm start`, and `npm run reverse` for 8081. |
 | `.gitignore` / "android folder" questions | `mobile/android` and `mobile/ios` are generated (`npx expo prebuild`) and git-ignored. Never edit them by hand. |

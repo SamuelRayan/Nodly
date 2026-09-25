@@ -134,11 +134,11 @@ Format: **what** we decided, then *why*.
   - The client is **openapi-fetch**; `unwrap()` turns problem+json into `ApiError`.
 
 ### Modes, sessions and storage
-- **D53. The mode (`family` / `elder`) and the elder's device token live in SecureStore.** The root layout picks the screen group with `Stack.Protected` guards: welcome, sign-in, onboarding, family, elder pairing, elder. The splash screen stays up until that's known.
+- **D53. The mode (`family` / `elder`) and the elder's device token live in SecureStore.** The root layout picks the screens with `Stack.Protected` guards: `welcome`, `signin/`, `onboarding`, `family-error`, `(family)/`, `pair/`, `home/` (the elder home). The splash screen stays up until that's known.
   - An elder phone only leaves elder mode when the API says `device_revoked`, which sends it to Welcome with a notice, or with the family PIN.
   - Before pairing, or before signing in, "Back" returns to the choice.
 - **D54. The Supabase session is stored in SecureStore, split into 1,800-character chunks.** Supabase's own example uses AES + AsyncStorage, which needs three more libraries; chunking avoids the ~2 KB platform limit Expo warns about with none.
-  - This follows Supabase's React Native setup: `react-native-url-polyfill`, `processLock`, and auto-refresh only in the foreground.
+  - This follows Supabase's React Native setup: `react-native-url-polyfill`, and auto-refresh only in the foreground. There's no `lock` option (their example passes `processLock`): supabase-js 2.117 deprecates it and warns at startup.
   - SecureStore items are readable after the first unlock since boot, so later background work (an "I'm okay" from a notification) can use the device token.
 - **D55. Auth header by mode:** the device token in elder mode, and the Supabase JWT (from `getSession()`, which refreshes itself) in family mode.
   - `device_revoked` and `invalid_token` are handled once, app-wide, from the TanStack Query caches.
@@ -167,3 +167,16 @@ Format: **what** we decided, then *why*.
   - **New libraries:** `openapi-fetch`, `@react-native-community/netinfo`, `react-native-qrcode-svg` + `react-native-svg`, `expo-device`.
   - **Covered by the stack or Supabase's documented React Native setup:** `@supabase/supabase-js`, `react-native-url-polyfill`, `react-i18next`.
   - **Tooling:** `react-dom` stays pinned at 19.2.3 like the template, because npm 11 otherwise pulls a mismatched optional peer.
+
+### Found while testing on emulators
+- **D64. Sign-in, elder pairing and the elder home are real route folders (`signin/`, `pair/`, `home/`), not route groups.**
+  *Groups like `(signin)` add nothing to the URL, so their screens share the root's URL space. After a restart the family sign-in opened on its verify screen, with no email. Each folder now has an `index` and its own Stack. The `(family)` group stays a group, anchored on `index` so a deep link (an invite) still has the family home underneath.*
+- **D65. Firebase files stay out of git; the repo will be public.**
+  - `google-services.json` is git-ignored. Local runs point at it through `GOOGLE_SERVICES_JSON` in `mobile/.env`, and cloud builds get it from an EAS secret *file* variable of the same name (development and production environments). `app.config.ts` only sets `android.googleServicesFile` when the variable exists.
+  - The FCM V1 service-account key lives outside the repo and is uploaded to EAS credentials; the app never sees it. `.gitignore` also blocks `*firebase-adminsdk*.json` and `*service-account*.json`.
+- **D66. Comparisons with server timestamps use the server's clock.** The API client estimates it from each response's `Date` header (`serverNow()`).
+  *The emulator's clock was 28 s behind, so a 15-minute pairing code showed "15:22 left". A phone running fast could also miss a pairing, because "paired after this code" compared server and phone clocks. Phones' clocks are often off; the server is the one clock that matters.*
+- **D67. Families manage an elder's phone from an elder screen:** the connected phone(s), **Disconnect** (with a confirmation), and **Set up a (new) phone**. Elder rows say whether a phone is connected.
+  *Before, tapping an elder always minted a new pairing code, and nothing in the app could disconnect a phone, although the elder's leave screen and the PIN screen both said the family could. Status comes from one `GET /devices` per elder row. That's fine for a few elders; Phase 4's status data can replace it.*
+- **D68. Two-device tests can run one emulator at a time.** Pairing goes through the server, so the family emulator can be off while the elder emulator pairs.
+  *Each emulator process takes about 3 GB of RAM, even at a 1.5 GB guest. With 3.3 GB free, a second one would have pushed the PC into swap.*

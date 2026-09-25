@@ -6,16 +6,104 @@ There's no Android phone for now: testing uses emulators, and these checks wait 
 Samsung Galaxy. None of them blocks a phase.
 
 - **Phase 3:** run the app on a physical Samsung phone (the "run it on my Samsung" check), including pairing an elder phone and restarting it.
-- **Phase 3:** a push notification actually arriving on a real device, once Firebase is set up; emulator results can differ.
+- **Phase 3:** a push notification arriving on a real device. FCM V1 works on emulators (2026-09-26); real phones, One UI battery rules and Do Not Disturb for `help_alerts` can differ.
+- **Phase 3:** pairing by **scanning** the QR code with the camera. Emulators paired by typing the code, which uses the same claim call.
 - **Phase 7 and later:** Galaxy Store test purchases, which only work on a physical Galaxy signed into a Samsung account (CLAUDE.md §2).
 - **Phase 9 and later:** One UI checks: launcher flow, battery optimisation guidance, Samsung Music (§12), foldable and cover screens (§15).
 
-## Phase 3 — Mobile foundation (in progress)
+## Phase 3 — Mobile foundation ✅ (2026-09-26)
 
 **How we work on this PC:**
 - Builds happen in the cloud with EAS, never locally.
 - Only one heavy thing runs at a time.
 - Details are in SETUP.md, "Low-memory workflow".
+
+### Done
+- **The app** (`/mobile`): Expo SDK 57, TypeScript strict, Expo Router with typed routes and the React Compiler. Name Nodly, slug and scheme `nodly`, app ID `com.nodlyapp.nodly`. EAS profiles `development`, `galaxy`, `play`, `ios`.
+- **Two modes:**
+  - The first launch asks in plain words: "Someone set this up for me" (elder) or "I'm setting Nodly up for someone" (family).
+  - An elder phone pairs by QR or typed code; case and dashes don't matter.
+  - It stays in elder mode across restarts until the family disconnects it or someone types the family PIN.
+- **Family sign-in:** Supabase email code (8 digits); the session is kept in SecureStore. Onboarding asks for a name, a country (with flags) and a timezone (with suggestions, never defaulted).
+- **Family screens (placeholders until Phase 8):**
+  - families: list, create, join by invite code or link
+  - a family: clock, elders with phone status, members
+  - add an elder
+  - pairing: QR, code, countdown, and "connected ✓" as soon as the phone pairs
+  - an elder's phone: disconnect, or set up a new phone
+  - invites (share, QR, cancel) and the family PIN
+- **Elder screens:** pairing (scan or type), home ("Hello, {name}" and the big **I'm okay**, which is a stub until Phase 4), and "This phone" to leave with the family PIN.
+- **API layer:**
+  - generated types; openapi-fetch; TanStack Query
+  - the auth header by mode; problem+json turned into friendly messages
+  - an offline banner
+  - the server clock (D66)
+- **i18n:** English, with typed keys. **Theme:** elder and family scales, light and dark tokens from CLAUDE.md §15.
+- **Push:**
+  - Expo push tokens for family members and elder phones.
+  - Channels `checkin`, `moments`, `help_alerts` (max) and `general`.
+  - FCM V1 through Firebase project `nodly-7b90c`. `google-services.json` comes from an EAS secret file; the service-account key is uploaded to EAS and kept out of the repo.
+- **Backend for the app:**
+  - `POST/DELETE /v1/me/push-tokens` and `POST /v1/device/push-token`
+  - the family PIN: `PUT/DELETE /v1/families/{id}/pin`, stored as scrypt, migration `0004`
+  - `POST /v1/device/leave`, with wrong PINs throttled
+- **EAS:** project `@samuelrayan/nodly`, keystore generated in the cloud, development build `d51f676d` (APK). No native change since, so no other build was needed.
+- **Docs:** SETUP 13–19, the Low-memory workflow, the exact FCM steps and a two-device checklist.
+- **Checks (2026-09-26):**
+  - backend: 297 tests pass; ruff check and format clean
+  - mobile: `npm run check` (tsc, lint, API types up to date) passes; expo-doctor 21/21
+
+### Verified on emulators (2026-09-26, Android 16 / API 36, 1.5 GB each)
+| Phone | What | Result |
+|---|---|---|
+| family | Sign in with the emailed code | ✅ families list; push token registered (`204`) |
+| family | Create "Rayan family", add Mary Rayan (🇮🇳, Asia/Kolkata) | ✅ pairing code `B740-QWQ7` with QR and a 15-minute countdown |
+| family | Restart the app | ✅ still signed in, family mode |
+| elder | "Someone set this up for me" → type `b740qwq7` | ✅ paired (`201`), elder home, device push token registered |
+| elder | Restart the app | ✅ still the elder home |
+| both | Test pushes through Expo's push service | ✅ tickets and receipts `ok`, shown on `general` (family) and `checkin` (elder) |
+| both | Channel importances | ✅ `help_alerts` 5 (max), `checkin` 4, `moments` 3, `general` 3 |
+| elder | "This phone" with no PIN set | ✅ "Ask your family to disconnect this phone" |
+| family | Elder → **Disconnect** | ✅ the elder phone's next call gets `401`, and it lands on Welcome with "Your family disconnected this phone" |
+| elder | Pair again with a new code | ✅ elder home |
+| family | Set the family PIN | ✅ `204` |
+| elder | Wrong PIN, then the right one | ✅ "That PIN isn't right" (`422`), then Welcome with "This phone is no longer in elder mode" (`204`); still Welcome after a restart |
+
+**Done-when:** create a family, add an elder and show a pairing code ✅; a second emulator pairs as that elder ✅; both keep the right mode after restart ✅; tsc and lint pass ✅. The Samsung run is deferred (top of this file). The two emulators ran one after the other rather than side by side, because only 3.3 GB of RAM was free (D68).
+
+### Fixed while testing
+- After a restart, family sign-in opened on the verify screen with no email. The screens moved into real route folders (D64).
+- The pairing countdown used the phone's clock, which was 28 s off. It now uses the server's clock (D66).
+- There was no way for a family to disconnect an elder's phone, and tapping an elder always minted a new code. There's now an elder screen (D67).
+- Searching "India" listed British Indian Ocean Territory first. Name matches now rank first.
+- supabase-js warned that the `lock` option is deprecated. Removed it.
+- Node's DEP0190 warning from `npm run gen:api:check`.
+
+### Decisions
+D49–D68 in [DECISIONS.md](DECISIONS.md). The main ones:
+- the app ID (D49)
+- cloud-only builds (D62)
+- the mode and session in SecureStore (D53, D54)
+- the family PIN (D56)
+- Firebase files kept out of git (D65)
+- the server clock (D66)
+
+### Known issues / follow-ups
+- **Sign-in needs no redirect URLs:** it's code-only (`detectSessionInUrl: false`, and the email has no link). The Phase 2 note about adding the app's redirect URLs is no longer needed. The Site URL stays `http://localhost:3000` for `dev_login.py`.
+- **Invite links are `nodly://invite/<code>`.** They open only where Nodly is installed. Links that work everywhere (https App Links / Universal Links) need a domain (Phase 16); the typed code works meanwhile.
+- **Dev builds only:** the dev client's floating "Tools" button sits over the header's right corner.
+- **Not checked yet:** dark mode, looked at on a device. The tokens exist; Phase 8 builds the real screens.
+- **English only** for now; the i18n setup is ready for more languages.
+- **Elder rows** make one `GET /devices` request per elder (D67).
+- **The pairing screen** makes a fresh code each time it opens, which cancels the previous one. That's intended; it only matters if two family members show codes for the same elder at once.
+- **`adb reverse` rules** sometimes vanish soon after an emulator's first boot. Re-run `npm run reverse` (SETUP troubleshooting).
+- **Not built yet:** iOS (Phase 10), the "I'm okay" check-in (Phase 4), the launcher (Phase 9).
+
+### Next
+**Phase 4 — Check-ins:**
+- the engine: a worker tick every 60 s, the `engine_actions` ledger, tested with frozen time across DST zones
+- the elder's **I'm okay** button and the notification action
+- the family's status view
 
 ## Phase 2 — Auth, families, invites, elder pairing ✅ (2026-09-25)
 
