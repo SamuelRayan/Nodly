@@ -83,7 +83,7 @@ function RootNavigator() {
         <Stack.Screen name="welcome" />
       </Stack.Protected>
       <Stack.Protected guard={status === 'family-signin'}>
-        <Stack.Screen name="(signin)" />
+        <Stack.Screen name="signin" />
       </Stack.Protected>
       <Stack.Protected guard={status === 'onboarding'}>
         <Stack.Screen name="onboarding" />
@@ -95,10 +95,10 @@ function RootNavigator() {
         <Stack.Screen name="(family)" />
       </Stack.Protected>
       <Stack.Protected guard={status === 'elder-pair'}>
-        <Stack.Screen name="(pairing)" />
+        <Stack.Screen name="pair" />
       </Stack.Protected>
       <Stack.Protected guard={status === 'elder'}>
-        <Stack.Screen name="(elder)" />
+        <Stack.Screen name="home" />
       </Stack.Protected>
     </Stack>
   );

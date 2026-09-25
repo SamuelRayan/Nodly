@@ -1,6 +1,6 @@
 import 'react-native-url-polyfill/auto';
 
-import { createClient, processLock } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 
 import { config } from '@/config';
@@ -14,7 +14,7 @@ export const supabase = createClient(config.supabaseUrl, config.supabasePublisha
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
-    lock: processLock,
+    // No `lock` option: supabase-js 2.117 deprecates it (refreshes coordinate without one).
   },
 });
 

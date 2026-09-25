@@ -33,7 +33,7 @@ export default function SignIn() {
       setError(failure.status === 429 ? t('errors.rate_limited') : t('errors.generic'));
       return;
     }
-    router.push({ pathname: '/verify', params: { email: address } });
+    router.push({ pathname: '/signin/verify', params: { email: address } });
   };
 
   return (

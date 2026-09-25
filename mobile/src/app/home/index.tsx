@@ -38,7 +38,7 @@ export default function ElderHome() {
         <Button large label={t('elder.okay')} onPress={() => setThanked(true)} />
         {thanked ? <Body>{t('elder.okay_thanks')}</Body> : null}
       </View>
-      <Button variant="secondary" label={t('elder.this_phone')} onPress={() => router.push('/leave')} />
+      <Button variant="secondary" label={t('elder.this_phone')} onPress={() => router.push('/home/leave')} />
     </Screen>
   );
 }
