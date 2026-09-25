@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 import httpx
 import pytest
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engin
 from nodly.config import Settings, get_settings
 from nodly.main import create_app
 from nodly.models import Base
+from tests.fake_supabase import TEST_SUPABASE_URL, FakeSupabase
 from tests.support import migrate
 
 
@@ -67,6 +69,7 @@ def make_settings(database_url: str, **overrides: object) -> Settings:
         "env": "test",
         "database_url": database_url,
         "code_hash_secret": TEST_CODE_SECRET,
+        "supabase_url": TEST_SUPABASE_URL,
         **overrides,
     }
     return Settings(_env_file=None, **values)  # type: ignore[call-arg, arg-type]
@@ -78,9 +81,26 @@ def settings(test_database_url: str) -> Settings:
 
 
 @pytest.fixture
-async def client(settings: Settings, clean_db: AsyncEngine) -> AsyncIterator[httpx.AsyncClient]:
-    app = create_app(settings)
-    transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+def fake_supabase() -> FakeSupabase:
+    return FakeSupabase()
+
+
+@asynccontextmanager
+async def app_client(
+    settings: Settings, supabase: FakeSupabase | None = None
+) -> AsyncIterator[httpx.AsyncClient]:
+    """A client for an app whose outbound HTTP (Supabase JWKS) goes to the fake."""
+    async with httpx.AsyncClient(transport=(supabase or FakeSupabase()).transport()) as outbound:
+        app = create_app(settings, http_client=outbound)
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            yield client
+        await app.state.engine.dispose()
+
+
+@pytest.fixture
+async def client(
+    settings: Settings, clean_db: AsyncEngine, fake_supabase: FakeSupabase
+) -> AsyncIterator[httpx.AsyncClient]:
+    async with app_client(settings, fake_supabase) as c:
         yield c
-    await app.state.engine.dispose()

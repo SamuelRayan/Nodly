@@ -44,11 +44,41 @@ class AppError(Exception):
     status: int = 400
     code: str = "bad_request"
     title: str = "Bad request"
+    headers: dict[str, str] | None = None
 
-    def __init__(self, detail: str | None = None, **extra: Any) -> None:
+    def __init__(
+        self, detail: str | None = None, *, headers: dict[str, str] | None = None, **extra: Any
+    ) -> None:
         super().__init__(detail or self.title)
         self.detail = detail
         self.extra = extra
+        if headers is not None:
+            self.headers = headers
+
+
+class UnauthorizedError(AppError):
+    status = 401
+    code = "unauthorized"
+    title = "Unauthorized"
+    headers = {"WWW-Authenticate": "Bearer"}  # noqa: RUF012  # read-only class default
+
+
+class ForbiddenError(AppError):
+    status = 403
+    code = "forbidden"
+    title = "Forbidden"
+
+
+class TooManyRequestsError(AppError):
+    status = 429
+    code = "rate_limited"
+    title = "Too many attempts"
+
+
+class ServiceUnavailableError(AppError):
+    status = 503
+    code = "service_unavailable"
+    title = "Service unavailable"
 
 
 class NotFoundError(AppError):
@@ -110,6 +140,7 @@ async def _app_error(request: Request, exc: Exception) -> JSONResponse:
         detail=exc.detail,
         instance=request.url.path,
         request_id=_request_id(request),
+        headers=exc.headers,
         **exc.extra,
     )
 
