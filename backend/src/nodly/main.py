@@ -8,6 +8,7 @@ from fastapi import FastAPI
 
 from nodly import __version__
 from nodly.api import dev, device, elders, families, health, invites, me, meta, pairing
+from nodly.api.openapi import install_openapi, operation_id
 from nodly.auth.supabase import SupabaseTokenVerifier
 from nodly.config import Settings, get_settings
 from nodly.constants import APP_NAME
@@ -43,7 +44,10 @@ def create_app(
         docs_url="/docs" if show_docs else None,
         redoc_url=None,
         openapi_url="/openapi.json" if show_docs else None,
+        generate_unique_id_function=operation_id,
+        swagger_ui_parameters={"persistAuthorization": True},
     )
+    install_openapi(app)
     app.state.settings = settings
     app.state.engine = engine
     app.state.sessionmaker = create_sessionmaker(engine)
