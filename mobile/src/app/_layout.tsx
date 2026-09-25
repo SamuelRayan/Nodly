@@ -2,11 +2,12 @@ import '@/i18n';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { SplashScreen, Stack } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { queryClient } from '@/api/query';
 import { SessionProvider, useMe, useSession } from '@/auth/session';
+import { Loading } from '@/components/ui';
 import { registerForPush } from '@/push/notifications';
 import { useAppStore } from '@/state/app';
 import { ThemeProvider } from '@/theme';
@@ -52,12 +53,16 @@ function useStatus(): Status {
 
 function RootNavigator() {
   const status = useStatus();
-
+  // Once anything has been shown, the splash screen is gone for good.
+  const [splashHidden, setSplashHidden] = useState(false);
+  if (status !== 'loading' && !splashHidden) {
+    setSplashHidden(true); // adjusting state while rendering, as React recommends
+  }
   useEffect(() => {
-    if (status !== 'loading') {
+    if (splashHidden) {
       SplashScreen.hide();
     }
-  }, [status]);
+  }, [splashHidden]);
 
   // Register this phone for push once it knows who it belongs to.
   useEffect(() => {
@@ -69,7 +74,8 @@ function RootNavigator() {
   }, [status]);
 
   if (status === 'loading') {
-    return null; // the splash screen stays up
+    // First launch: the splash screen is still up. Later (e.g. just signed in): a spinner.
+    return splashHidden ? <Loading /> : null;
   }
   return (
     <Stack screenOptions={{ headerShown: false }}>
