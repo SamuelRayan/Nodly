@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from nodly import __version__
-from nodly.api import health, meta
+from nodly.api import dev, health, meta
 from nodly.config import Settings, get_settings
 from nodly.constants import APP_NAME
 from nodly.db import create_engine, create_sessionmaker
@@ -45,4 +45,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(meta.router)
+    if settings.env == "dev":
+        app.include_router(dev.router)
     return app
