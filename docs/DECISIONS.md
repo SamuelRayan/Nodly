@@ -195,7 +195,7 @@ Format: **what** we decided, then *why*.
     - foldable layouts, iOS, Google sign-in
   - The Test Store key never ships in a store build (CLAUDE.md §10).
 - **D70. The Claude Design handoff of 2026-09-26 (`design/2026-09-26-nodly-handoff/`) is the visual reference.**
-  - **Fonts:** Newsreader for headings (500–700, a variable font set to optical size 36) and Atkinson Hyperlegible for everything else (400/700). Both are under the SIL Open Font License, embedded with the expo-font config plugin.
+  - **Fonts:** Newsreader for headings (static 500, 600 and 700; expo-font 57.0.4's plugin can't set a variable font's axes) and Atkinson Hyperlegible for everything else (400/700). Both are under the SIL Open Font License, embedded with the expo-font config plugin.
   - **Palette:** the design's colours replace the starting tokens in CLAUDE.md §15. Checked against its contrast rules:
     - body text 7.5:1 or better on every background, in light and dark
     - labels on the green, red and alert buttons 5.4:1 or better
