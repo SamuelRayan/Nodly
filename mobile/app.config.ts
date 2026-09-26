@@ -92,13 +92,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
               ],
             },
             {
-              // Variable font: one file, one face per weight, set for display sizes (opsz 36).
+              // Static instances (expo-font 57.0.4's plugin takes one file per weight; it
+              // doesn't read variable-font axes yet).
               fontFamily: 'Newsreader',
-              path: './assets/fonts/newsreader_variable.ttf',
               fontDefinitions: [
-                { weight: 500, axes: { opsz: 36 } },
-                { weight: 600, axes: { opsz: 36 } },
-                { weight: 700, axes: { opsz: 36 } },
+                { path: './assets/fonts/newsreader_medium.ttf', weight: 500 },
+                { path: './assets/fonts/newsreader_semibold.ttf', weight: 600 },
+                { path: './assets/fonts/newsreader_bold.ttf', weight: 700 },
               ],
             },
           ],
@@ -107,7 +107,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           fonts: [
             './assets/fonts/atkinson_hyperlegible_regular.ttf',
             './assets/fonts/atkinson_hyperlegible_bold.ttf',
-            './assets/fonts/newsreader_variable.ttf',
+            './assets/fonts/newsreader_medium.ttf',
+            './assets/fonts/newsreader_semibold.ttf',
+            './assets/fonts/newsreader_bold.ttf',
           ],
         },
       },
