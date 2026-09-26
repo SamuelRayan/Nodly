@@ -11,6 +11,49 @@ Samsung Galaxy. None of them blocks a phase.
 - **Phase 7 and later:** Galaxy Store test purchases, which only work on a physical Galaxy signed into a Samsung account (CLAUDE.md §2).
 - **Phase 9 and later:** One UI checks: launcher flow, battery optimisation guidance, Samsung Music (§12), foldable and cover screens (§15).
 
+## Shipaton sprint (in progress; plan and scope in DECISIONS D69–D72)
+
+Target: the Next Gen award. The deadline is 30 Sep, 11:45 PM PDT (1 Oct, 12:15 PM IST).
+
+### Day 1 (2026-09-26): check-ins and Help, backend and app
+- **Development build 2** (`08f48d7f`) adds RevenueCat, image picker, audio, video, file system and haptics, plus the embedded fonts and new icons. The first attempt (`7d34e42b`) failed in prebuild: expo-font 57.0.4's plugin can't read a variable font's family-level path. A local prebuild now validates native config before any cloud build.
+- **Check-ins (Phase 4 slice):**
+  - the engine as pure functions, tested across DST and odd offsets
+  - a 60-second periodic tick in the worker, with the `engine_actions` ledger
+  - reminders, a family notice at the due time, and the missed check-in alert
+  - "All good" after a late tap; Mark okay; "I'm on it"
+  - the family status with the week strip; "starts tomorrow" for phones set up after the due time
+- **Help (Phase 5 slice):**
+  - requests with optional location, battery and network
+  - repeats every minute until "I'm on it" (at most 15 minutes); SMS and voice logged as skipped until Phase 15
+  - cancel and resolve; the whole timeline is kept
+  - test alerts: labelled, 3 a day, never repeating, never blocking real Help
+- **App:**
+  - the design system from the handoff (tokens, fonts, icons)
+  - elder screens E2, E3, E4, E7, E8, E9, E10 and the past-due and alerted states (E11, E12)
+  - family dashboard (F2, F9, F10), full-screen Help alert (F7), Help banners
+  - notification buttons ("I'm okay", "I'm on it")
+- **Tests:** 367 backend tests pass; tsc and lint are clean.
+
+**Verified on emulators (one at a time, D68):**
+- Family:
+  - dashboard with a missed check-in → "I'm on it" ("Samuel is on it") → Mark okay ("Samuel marked them okay at 1:33 PM · 1 minute ago")
+  - test Help alert: F7 screen, push "Test: Mom pressed Help" received, "Alert delivered", "I'm on it", Resolved
+- Elder:
+  - paired → "You're connected with Samuel" → home (no false nudge on setup day) → "I'm okay" → thank-you → "Done for today"
+  - Help countdown → "Your family has been alerted", "Samuel · Alert delivered", "Also call 112"
+
+**Not verified yet:**
+- the elder seeing "Samuel is on it" (E10), and "I'm okay now"
+- the notification buttons
+- a real reminder arriving on the elder's phone at the reminder time
+
+### Found today
+- **Hermes on Android has no `Intl.RelativeTimeFormat` (nor `PluralRules`).** "12 minutes ago" is now built from plain strings.
+- **An emulator restored from a quick-boot snapshot lost its display:** every app went black and ours reported an ANR ("no focused window"). A cold boot (`-no-snapshot-load`) fixed it. Use cold boots for now.
+- **Claude Code stops background tasks when memory runs critically low.** It stopped Metro, the API, the worker and the elder emulator mid-test (Edge was open, about 1.7 GB). Close the browser before emulator sessions.
+- **The Phase 2 demo elder** (a fake paired phone) is part of the engine too. It got a real missed check-in alert on the family emulator. Only the dev database and your own device are involved.
+
 ## Phase 3 — Mobile foundation ✅ (2026-09-26)
 
 **How we work on this PC:**

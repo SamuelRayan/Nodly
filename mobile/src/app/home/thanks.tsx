@@ -42,12 +42,14 @@ export default function Thanks() {
           {t('elder.thanks_line', { names })}
         </T>
         {at ? (
-          <Pill
-            icon="clock"
-            label={t('elder.checked_at', { time: clockTime(at, me.data.elder.timezone) })}
-            background={colors.okTint}
-            color={colors.okText}
-          />
+          <View style={{ alignSelf: 'center' }}>
+            <Pill
+              icon="clock"
+              label={t('elder.checked_at', { time: clockTime(at, me.data.elder.timezone) })}
+              background={colors.okTint}
+              color={colors.okText}
+            />
+          </View>
         ) : null}
       </View>
       <Button label={t('elder.back_home')} icon="home" onPress={() => router.back()} />

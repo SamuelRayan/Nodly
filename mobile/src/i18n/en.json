@@ -262,7 +262,8 @@
     "explain_paused": "Check-ins are paused for {{name}}.",
     "explain_no_phone": "Set up {{name}}’s phone to start daily check-ins.",
     "status_starts_tomorrow": "Starts tomorrow",
-    "explain_starts_tomorrow": "{{name}}’s phone was set up after today’s {{due}} check-in time, so daily check-ins start tomorrow."
+    "explain_starts_tomorrow": "{{name}}’s phone was set up after today’s {{due}} check-in time, so daily check-ins start tomorrow.",
+    "open_elder": "Their phone, settings and test alerts"
   },
   "help": {
     "title": "Help",

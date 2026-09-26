@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Linking, View } from 'react-native';
+import { router } from 'expo-router';
+import { Linking, Pressable, View } from 'react-native';
 
 import type { components } from '@/api/schema';
 import { useCheckinAction, useCheckinStatus } from '@/api/hooks';
@@ -131,7 +132,12 @@ export function ElderCard({ elder }: { elder: Elder }) {
 
   return (
     <Card>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityHint={t('checkin.open_elder')}
+        onPress={() => router.push({ pathname: '/elder/[elderId]', params: { elderId: elder.id } })}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+      >
         <Avatar name={elder.display_name} size={52} background={colors.okTint} color={colors.okText} />
         <View style={{ flex: 1, gap: 1 }}>
           <T size={21} weight="bold">
@@ -142,7 +148,7 @@ export function ElderCard({ elder }: { elder: Elder }) {
           </T>
         </View>
         {s ? <StatusPill status={s.status} /> : null}
-      </View>
+      </Pressable>
 
       <ErrorNote error={status.error ?? markOkay.error ?? ack.error} />
       {s ? <TodayPanel status={s} name={name} tz={tz} /> : null}
