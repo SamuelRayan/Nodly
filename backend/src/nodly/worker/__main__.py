@@ -8,9 +8,10 @@ import asyncio
 import logging
 import signal
 
-import nodly.jobs.handlers  # noqa: F401  # registers every handler
+import nodly.jobs.handlers  # noqa: F401  # registers every handler and periodic task
 from nodly.config import Settings, get_settings
 from nodly.db import create_engine, create_sessionmaker
+from nodly.jobs.registry import PERIODIC
 from nodly.log import configure_logging
 from nodly.worker.runner import Worker
 
@@ -19,7 +20,7 @@ logger = logging.getLogger("nodly.worker")
 
 async def serve(settings: Settings) -> None:
     engine = create_engine(settings)
-    worker = Worker(settings, create_sessionmaker(engine))
+    worker = Worker(settings, create_sessionmaker(engine), periodic=PERIODIC)
     stop, force = asyncio.Event(), asyncio.Event()
     loop = asyncio.get_running_loop()
 

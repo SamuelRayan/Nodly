@@ -1,5 +1,5 @@
-"""Importing this package registers every job handler. Add new handler modules here."""
+"""Importing this package registers every job handler and periodic task. Add new modules here."""
 
-from nodly.jobs.handlers import debug
+from nodly.jobs.handlers import checkins, debug
 
-__all__ = ["debug"]
+__all__ = ["checkins", "debug"]

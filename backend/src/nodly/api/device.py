@@ -1,21 +1,26 @@
 """Endpoints for a paired elder phone, authenticated with its device token."""
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from typing import Literal
 
 from fastapi import APIRouter, Request, Response, status
 from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from nodly.api.checkins import ScheduleOut, schedule_out
 from nodly.api.common import SettingsDep, client_ip, problems
 from nodly.api.pairing import FamilyRef
 from nodly.api.push_tokens import PushTokenIn
 from nodly.api.schemas import DeviceOut, ElderOut, device_out, elder_out
 from nodly.api.types import FamilyPin
 from nodly.audit import record_audit
-from nodly.auth.devices import CurrentDevice
+from nodly.auth.devices import CurrentDevice, DeviceAccess
+from nodly.checkins.service import elder_day, record_checkin
 from nodly.clock import utcnow
 from nodly.db import SessionDep
 from nodly.errors import ConflictError, InvalidInputError
-from nodly.models import ActorType
+from nodly.models import ActorType, CheckinSource, FamilyMember, FamilyRole, User
 from nodly.push import register_push_token
 from nodly.security.credentials import generate_device_token, hash_device_token
 from nodly.security.pins import verify_pin
@@ -147,3 +152,71 @@ async def rotate_device_token(
     )
     await session.commit()
     return RotatedToken(device_token=token, previous_token_valid_until=grace_until)
+
+
+# ---------------------------------------------------------------- check-ins (CLAUDE.md §7)
+
+
+class DeviceCheckinIn(BaseModel):
+    source: Literal["app", "notification"] = Field(
+        default="app", description="The home screen button, or the button on a reminder"
+    )
+
+
+class DeviceToday(BaseModel):
+    local_date: date = Field(description="Today, in the elder's timezone")
+    checked_in_at: datetime | None = Field(description='When they said "I\'m okay" today')
+    marked_okay_by_family: bool = Field(
+        description="A family member marked them okay (and they haven't tapped yet)"
+    )
+    schedule: ScheduleOut
+    family_alerted_at: datetime | None = Field(
+        description="When the family got today's missed check-in alert, if they did"
+    )
+    family_names: list[str] = Field(
+        description='First names of the family members, organizer first ("Priya and Arjun")'
+    )
+
+
+async def _device_today(session: AsyncSession, access: DeviceAccess) -> DeviceToday:
+    elder = access.elder
+    day = await elder_day(session, elder, utcnow())
+    members = await session.execute(
+        select(User.display_name)
+        .join(FamilyMember, FamilyMember.user_id == User.id)
+        .where(FamilyMember.family_id == access.family.id)
+        .order_by((FamilyMember.role == FamilyRole.organizer).desc(), FamilyMember.created_at)
+    )
+    checkin = day.checkin
+    return DeviceToday(
+        local_date=day.day,
+        checked_in_at=checkin.checked_in_at if checkin and checkin.source != "family" else None,
+        marked_okay_by_family=bool(checkin and checkin.source == "family"),
+        schedule=schedule_out(day.schedule),
+        family_alerted_at=day.alert.raised_at if day.alert else None,
+        family_names=[name.split()[0] for (name,) in members if name and name.strip()],
+    )
+
+
+@router.get("/today", responses=problems(401))
+async def device_today(access: CurrentDevice, session: SessionDep) -> DeviceToday:
+    """The elder's home screen: checked in today or not, when the family would hear, and
+    who's in the family."""
+    return await _device_today(session, access)
+
+
+@router.post("/checkin", responses=problems(401, 422))
+async def device_checkin(
+    body: DeviceCheckinIn, access: CurrentDevice, session: SessionDep
+) -> DeviceToday:
+    """ "I'm okay". Once a day counts; tapping again changes nothing. Closes a missed
+    check-in alert and tells the family "All good" if they'd been told to worry."""
+    await record_checkin(
+        session,
+        access.elder,
+        utcnow(),
+        CheckinSource(body.source),
+        device_id=access.device.id,
+    )
+    await session.commit()
+    return await _device_today(session, access)

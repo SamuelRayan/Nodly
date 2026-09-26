@@ -2195,6 +2195,283 @@
         }
       }
     },
+    "/v1/elders/{elder_id}/checkins/today": {
+      "get": {
+        "tags": [
+          "checkins"
+        ],
+        "summary": "Checkin Status",
+        "description": "Today in the elder's timezone: checked in or not, reminders, alerts, and the week.",
+        "operationId": "checkin_status",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckinStatusOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/elders/{elder_id}/checkins/mark-okay": {
+      "post": {
+        "tags": [
+          "checkins"
+        ],
+        "summary": "Mark Okay",
+        "description": "\"I've talked to them\": counts as today's check-in, closes a missed check-in alert and\ntells the rest of the family. If they already checked in, nothing changes.",
+        "operationId": "mark_okay",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckinStatusOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/elders/{elder_id}/checkins/alert/ack": {
+      "post": {
+        "tags": [
+          "checkins"
+        ],
+        "summary": "Ack Alert",
+        "description": "\"I'm on it\" for today's missed check-in alert. The first member to say so is kept.",
+        "operationId": "ack_alert",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckinStatusOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/elders/{elder_id}/pairing-codes": {
       "post": {
         "tags": [
@@ -2725,6 +3002,100 @@
         ]
       }
     },
+    "/v1/device/today": {
+      "get": {
+        "tags": [
+          "device"
+        ],
+        "summary": "Device Today",
+        "description": "The elder's home screen: checked in today or not, when the family would hear, and\nwho's in the family.",
+        "operationId": "device_today",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceToday"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ]
+      }
+    },
+    "/v1/device/checkin": {
+      "post": {
+        "tags": [
+          "device"
+        ],
+        "summary": "Device Checkin",
+        "description": "\"I'm okay\". Once a day counts; tapping again changes nothing. Closes a missed\ncheck-in alert and tells the family \"All good\" if they'd been told to worry.",
+        "operationId": "device_checkin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceCheckinIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceToday"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ]
+      }
+    },
     "/v1/meta/timezones": {
       "get": {
         "tags": [
@@ -2868,6 +3239,97 @@
   },
   "components": {
     "schemas": {
+      "AlertOut": {
+        "properties": {
+          "raised_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Raised At"
+          },
+          "acked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acked At"
+          },
+          "acked_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acked By Name",
+            "description": "Who said \"I'm on it\""
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "raised_at",
+          "acked_at",
+          "acked_by_name",
+          "resolved_at"
+        ],
+        "title": "AlertOut"
+      },
+      "CheckinOut": {
+        "properties": {
+          "local_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Local Date",
+            "description": "The elder's local day"
+          },
+          "checked_in_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked In At"
+          },
+          "source": {
+            "$ref": "#/components/schemas/CheckinSource"
+          },
+          "marked_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marked By Name",
+            "description": "Who marked them okay (source = family)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "local_date",
+          "checked_in_at",
+          "source",
+          "marked_by_name"
+        ],
+        "title": "CheckinOut"
+      },
       "CheckinSettings": {
         "properties": {
           "remind_at": {
@@ -2962,6 +3424,131 @@
         "type": "object",
         "title": "CheckinSettingsIn",
         "description": "Any subset; missing values keep the current (or default) setting."
+      },
+      "CheckinSource": {
+        "type": "string",
+        "enum": [
+          "app",
+          "notification",
+          "family"
+        ],
+        "title": "CheckinSource"
+      },
+      "CheckinStatusOut": {
+        "properties": {
+          "elder_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Elder Id"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "local_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Local Date",
+            "description": "Today, in the elder's timezone"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "late",
+              "active",
+              "missed",
+              "okay",
+              "paused",
+              "no_phone"
+            ],
+            "title": "Status",
+            "description": "okay: checked in (or marked okay). waiting: not due yet. late: past due, family told. active: past due but used Nodly today (activity counts as okay). missed: missed check-in alert is open. paused: check-ins paused. no_phone: no connected phone, so no reminders or alerts."
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ScheduleOut"
+          },
+          "checkin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckinOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "alert": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlertOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reminders": {
+            "items": {
+              "$ref": "#/components/schemas/ReminderOut"
+            },
+            "type": "array",
+            "title": "Reminders",
+            "description": "Reminders sent to the elder today"
+          },
+          "active_today": {
+            "type": "boolean",
+            "title": "Active Today"
+          },
+          "last_seen_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen At",
+            "description": "The elder's phone last used Nodly"
+          },
+          "last_checkin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckinOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The latest check-in before today"
+          },
+          "week": {
+            "items": {
+              "$ref": "#/components/schemas/DayOut"
+            },
+            "type": "array",
+            "title": "Week",
+            "description": "The last 7 days, oldest first, today last"
+          }
+        },
+        "type": "object",
+        "required": [
+          "elder_id",
+          "timezone",
+          "local_date",
+          "status",
+          "schedule",
+          "checkin",
+          "alert",
+          "reminders",
+          "active_today",
+          "last_seen_at",
+          "last_checkin",
+          "week"
+        ],
+        "title": "CheckinStatusOut"
       },
       "ClaimIn": {
         "properties": {
@@ -3100,6 +3687,46 @@
         ],
         "title": "CountryOut"
       },
+      "DayOut": {
+        "properties": {
+          "local_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Local Date"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "okay",
+              "missed",
+              "none"
+            ],
+            "title": "State"
+          }
+        },
+        "type": "object",
+        "required": [
+          "local_date",
+          "state"
+        ],
+        "title": "DayOut"
+      },
+      "DeviceCheckinIn": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "app",
+              "notification"
+            ],
+            "title": "Source",
+            "description": "The home screen button, or the button on a reminder",
+            "default": "app"
+          }
+        },
+        "type": "object",
+        "title": "DeviceCheckinIn"
+      },
       "DeviceMe": {
         "properties": {
           "device": {
@@ -3214,6 +3841,68 @@
           "ios"
         ],
         "title": "DevicePlatform"
+      },
+      "DeviceToday": {
+        "properties": {
+          "local_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Local Date",
+            "description": "Today, in the elder's timezone"
+          },
+          "checked_in_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked In At",
+            "description": "When they said \"I'm okay\" today"
+          },
+          "marked_okay_by_family": {
+            "type": "boolean",
+            "title": "Marked Okay By Family",
+            "description": "A family member marked them okay (and they haven't tapped yet)"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ScheduleOut"
+          },
+          "family_alerted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family Alerted At",
+            "description": "When the family got today's missed check-in alert, if they did"
+          },
+          "family_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Family Names",
+            "description": "First names of the family members, organizer first (\"Priya and Arjun\")"
+          }
+        },
+        "type": "object",
+        "required": [
+          "local_date",
+          "checked_in_at",
+          "marked_okay_by_family",
+          "schedule",
+          "family_alerted_at",
+          "family_names"
+        ],
+        "title": "DeviceToday"
       },
       "ElderCreate": {
         "properties": {
@@ -4412,6 +5101,29 @@
         ],
         "title": "ReadyOut"
       },
+      "ReminderOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "remind",
+              "due_remind"
+            ],
+            "title": "Kind"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "at"
+        ],
+        "title": "ReminderOut"
+      },
       "RotatedToken": {
         "properties": {
           "device_token": {
@@ -4432,6 +5144,35 @@
           "previous_token_valid_until"
         ],
         "title": "RotatedToken"
+      },
+      "ScheduleOut": {
+        "properties": {
+          "remind_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Remind At",
+            "description": "Reminder to the elder (UTC)"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Due At",
+            "description": "Check in by (UTC); the family hears after this"
+          },
+          "alert_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Alert At",
+            "description": "Missed check-in alert to the family (UTC)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "remind_at",
+          "due_at",
+          "alert_at"
+        ],
+        "title": "ScheduleOut"
       },
       "SuggestionReason": {
         "type": "string",
@@ -4622,6 +5363,10 @@
     {
       "name": "pairing",
       "description": "Pairing an elder's phone (15-minute codes, no login on the phone) and managing paired devices."
+    },
+    {
+      "name": "checkins",
+      "description": "An elder's daily check-in, for the family: today's status, the last 7 days, \"mark okay\" and \"I'm on it\"."
     },
     {
       "name": "device",

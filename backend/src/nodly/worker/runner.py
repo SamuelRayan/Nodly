@@ -23,7 +23,14 @@ from nodly.jobs.queue import (
     mark_succeeded,
     reclaim_stale,
 )
-from nodly.jobs.registry import HANDLERS, JobContext, JobHandler, PermanentJobError
+from nodly.jobs.registry import (
+    HANDLERS,
+    JobContext,
+    JobHandler,
+    PeriodicContext,
+    PeriodicTask,
+    PermanentJobError,
+)
 from nodly.log import bind_log_context
 from nodly.models import JobStatus
 
@@ -41,6 +48,7 @@ class Worker:
         sessionmaker: async_sessionmaker[AsyncSession],
         *,
         handlers: Mapping[str, JobHandler] | None = None,
+        periodic: Mapping[str, PeriodicTask] | None = None,
         worker_id: str | None = None,
         clock: Callable[[], datetime] = utcnow,
         rand: Callable[[], float] = random.random,
@@ -48,10 +56,14 @@ class Worker:
         self.settings = settings
         self.sessionmaker = sessionmaker
         self.handlers = HANDLERS if handlers is None else handlers
+        # Opt-in (python -m nodly.worker passes PERIODIC), so test workers only run jobs.
+        self.periodic = dict(periodic or {})
         self.worker_id = worker_id or default_worker_id()
         self.clock = clock
         self.rand = rand
         self._running: set[asyncio.Task[None]] = set()
+        self._periodic_next: dict[str, float] = {}
+        self._periodic_running: dict[str, asyncio.Task[None]] = {}
 
     # ------------------------------------------------------------ loop
 
@@ -69,6 +81,7 @@ class Worker:
         stop_waiter = asyncio.create_task(stop.wait())
         try:
             while not stop.is_set():
+                self._start_due_periodic()
                 try:
                     await self._reclaim_stale()
                     free = self.settings.worker_concurrency - len(self._running)
@@ -86,8 +99,36 @@ class Worker:
                 )
         finally:
             stop_waiter.cancel()
+            for task in self._periodic_running.values():
+                task.cancel()
+            await asyncio.gather(*self._periodic_running.values(), return_exceptions=True)
             await self._drain(force)
             logger.info("worker stopped", extra={"worker_id": self.worker_id})
+
+    # ------------------------------------------------------------ periodic tasks
+
+    def _start_due_periodic(self) -> None:
+        now = time.monotonic()
+        for name, task in self.periodic.items():
+            running = self._periodic_running.get(name)
+            if now < self._periodic_next.get(name, 0.0) or (running and not running.done()):
+                continue
+            self._periodic_next[name] = now + task.interval(self.settings)
+            self._periodic_running[name] = asyncio.create_task(
+                self.run_periodic(task), name=f"periodic-{name}"
+            )
+
+    async def run_periodic(self, task: PeriodicTask) -> None:
+        """One run of a periodic task; failures are logged and the next run happens anyway."""
+        context = PeriodicContext(self.settings, self.sessionmaker, self.clock())
+        with bind_log_context(periodic=task.name):
+            try:
+                async with asyncio.timeout(self.settings.job_timeout_seconds):
+                    await task.run(context)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.exception("periodic task failed")
 
     async def run_once(self) -> int:
         """One pass: reclaim stale jobs, claim up to `concurrency` due jobs and run them to the

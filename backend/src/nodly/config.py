@@ -74,6 +74,16 @@ class Settings(BaseSettings):
     device_token_rotation_grace_seconds: float = Field(default=600.0, ge=0)
     device_last_seen_interval_seconds: float = Field(default=300.0, ge=0)
 
+    # Push. "expo" sends through the Expo Push Service; "record" only keeps messages in memory
+    # (tests, or offline dev). The access token is needed only if "enhanced security" is on
+    # for the Expo project.
+    push_provider: Literal["expo", "record"] = "expo"
+    expo_push_url: str = "https://exp.host/--/api/v2/push/send"
+    expo_push_access_token: SecretStr | None = None
+
+    # The check-in engine's tick (CLAUDE.md §7).
+    checkin_tick_seconds: float = Field(default=60.0, gt=0)
+
     @property
     def supabase_issuer(self) -> str | None:
         return f"{self.supabase_url.rstrip('/')}/auth/v1" if self.supabase_url else None

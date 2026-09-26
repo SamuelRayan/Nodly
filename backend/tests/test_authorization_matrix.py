@@ -11,14 +11,17 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 import pytest
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nodly.config import Settings
 from nodly.main import create_app
 from nodly.models import (
+    CheckinAlert,
     Elder,
     ElderDevice,
     Family,
@@ -278,6 +281,18 @@ async def _query(params: dict[str, str]) -> dict[str, Any]:
     return {"__query__": params}
 
 
+async def open_missed_alert(world: World) -> dict[str, Any]:
+    """Today's missed check-in alert for elder A (Asha, Asia/Kolkata), so there's one to ack."""
+    today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+    await world.session.execute(
+        insert(CheckinAlert)
+        .values(elder_id=world.elder_a, local_date=today, raised_at=datetime.now(UTC))
+        .on_conflict_do_nothing()
+    )
+    await world.session.commit()
+    return {}
+
+
 async def transfer_target(world: World) -> dict[str, Any]:
     return {"__body__": {"user_id": str(world.member_a.id)}}
 
@@ -380,6 +395,17 @@ CASES = [
         body={"pin": "2468"},
     ),
     Case("DELETE", "/v1/families/{family_id}/pin", family_a(member=403, organizer=204)),
+    # check-ins (Phase 4)
+    Case("GET", "/v1/elders/{elder_id}/checkins/today", family_a(member=200, organizer=200)),
+    Case("POST", "/v1/elders/{elder_id}/checkins/mark-okay", family_a(member=200, organizer=200)),
+    Case(
+        "POST",
+        "/v1/elders/{elder_id}/checkins/alert/ack",
+        family_a(member=200, organizer=200),
+        prepare=open_missed_alert,
+    ),
+    Case("GET", "/v1/device/today", device_only()),
+    Case("POST", "/v1/device/checkin", device_only(), body={"source": "app"}),
 ]
 
 
