@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Elder – Help countdown (dark)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&amp;family=Newsreader:opsz,wght@6..72,500..700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#1E1412}
+a{color:#F2ECE2}a:hover{color:#F2A596}
+a:focus-visible,button:focus-visible{outline:3px solid #F2ECE2;outline-offset:3px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding: 64px 24px 28px; background: #1E1412; color: #F2ECE2; font-family: 'Atkinson Hyperlegible', Verdana, sans-serif; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 17px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #F2A596">Help</span>
+<h1 style="margin: 0; font-family: 'Newsreader', Georgia, serif; font-size: 40px; line-height: 1.08; font-weight: 600; letter-spacing: -0.015em">Alerting your family</h1>
+</div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px">
+<div style="position: relative; width: 244px; height: 244px">
+<svg width="244" height="244" viewBox="0 0 244 244" aria-hidden="true" style="display: block"><circle cx="122" cy="122" r="108" fill="#FFFDF9" stroke="#F0C9C1" stroke-width="16"></circle><circle cx="122" cy="122" r="108" fill="none" stroke="#B23A2B" stroke-width="16" stroke-linecap="round" stroke-dasharray="678.6" stroke-dashoffset="271.4" transform="rotate(-90 122 122)"></circle></svg>
+<div style="position: absolute; left: 0; top: 0; width: 244px; height: 244px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #F2A596" role="timer" aria-live="polite">
+<span style="font-family: 'Newsreader', Georgia, serif; font-size: 112px; line-height: 0.9; font-weight: 600">3</span>
+<span style="font-size: 20px; font-weight: 700">seconds</span>
+</div>
+</div>
+<p style="margin: 0; font-size: 22px; line-height: 1.4; color: #B8AC9C; text-align: center; max-width: 300px; text-wrap: balance">Priya and Arjun will get an alert on their phones.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<a href="ElderHelpSent.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 12px; height: 68px; border-radius: 22px; background: #B23A2B; color: #FFFFFF; font-size: 22px; font-weight: 700; text-decoration: none; box-shadow: 0 12px 26px -14px rgba(138, 42, 31, 0.8)">Send now</a>
+<a href="ElderHomeDark.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 12px; height: 80px; border-radius: 22px; background: #211D18; border: 2.5px solid #F2ECE2; color: #F2ECE2; font-size: 26px; font-weight: 700; text-decoration: none"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg>Cancel, I’m okay</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

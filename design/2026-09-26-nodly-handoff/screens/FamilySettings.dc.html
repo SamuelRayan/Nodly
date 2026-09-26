@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Family – Check-in and alert settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&amp;family=Newsreader:opsz,wght@6..72,500..700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FAF6EE}
+a{color:#1E1A15}a:hover{color:#2D6A4F}
+a:focus-visible,button:focus-visible{outline:3px solid #1E1A15;outline-offset:3px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding: 52px 20px 24px; background: #FAF6EE; color: #1E1A15; font-family: 'Atkinson Hyperlegible', Verdana, sans-serif; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 12px">
+<a href="FamilyDashboard.dc.html" aria-label="Back" style="width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid #CFC4B3; background: #FFFDF9; color: #1E1A15; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="M11 6l-6 6 6 6"></path></svg></a>
+<h1 style="margin: 0; font-family: 'Newsreader', Georgia, serif; font-size: 26px; font-weight: 600">Amma’s settings</h1>
+</div>
+<section style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #574E44">Daily check-in</h2>
+<div style="border-radius: 18px; background: #FFFDF9; border: 1px solid #E7DFD2; display: flex; flex-direction: column">
+<button type="button" style="display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 16px; border: none; background: transparent; color: #1E1A15; font-family: inherit; font-size: 16px; cursor: pointer; text-align: left"><span>Check in by</span><span style="font-weight: 700">10:00 AM her time</span></button>
+<div style="height: 1px; background: #F0E9DD; margin: 0 16px"></div>
+<button type="button" style="display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 16px; border: none; background: transparent; color: #1E1A15; font-family: inherit; font-size: 16px; cursor: pointer; text-align: left"><span>Remind her every</span><span style="font-weight: 700">30 min</span></button>
+<div style="height: 1px; background: #F0E9DD; margin: 0 16px"></div>
+<button type="button" style="display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 16px; border: none; background: transparent; color: #1E1A15; font-family: inherit; font-size: 16px; cursor: pointer; text-align: left"><span>Alert family after</span><span style="font-weight: 700">1 hour</span></button>
+</div>
+<p style="margin: 0 4px; font-size: 13px; line-height: 1.4; color: #574E44">If she hasn’t checked in by 11:00 AM, everyone below gets a red alert.</p>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #574E44">Who gets alerts</h2>
+<div style="border-radius: 18px; background: #FFFDF9; border: 1px solid #E7DFD2; display: flex; flex-direction: column">
+<div style="display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 0 16px">
+<div style="width: 36px; height: 36px; border-radius: 50%; background: #F8E6C4; color: #5C4A2A; display: flex; align-items: center; justify-content: center; font-family: 'Newsreader', Georgia, serif; font-size: 17px; font-weight: 600">P</div>
+<span style="flex-grow: 1; font-size: 16px; font-weight: 700">Priya (you)</span>
+<button type="button" role="switch" aria-checked="true" aria-label="Alerts for Priya" style="width: 52px; height: 32px; border-radius: 999px; border: none; background: #2D6A4F; padding: 3px; display: flex; justify-content: flex-end; cursor: pointer"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></button>
+</div>
+<div style="height: 1px; background: #F0E9DD; margin: 0 16px"></div>
+<div style="display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 0 16px">
+<div style="width: 36px; height: 36px; border-radius: 50%; background: #DDE6F0; color: #2B3F55; display: flex; align-items: center; justify-content: center; font-family: 'Newsreader', Georgia, serif; font-size: 17px; font-weight: 600">A</div>
+<span style="flex-grow: 1; font-size: 16px; font-weight: 700">Arjun</span>
+<button type="button" role="switch" aria-checked="true" aria-label="Alerts for Arjun" style="width: 52px; height: 32px; border-radius: 999px; border: none; background: #2D6A4F; padding: 3px; display: flex; justify-content: flex-end; cursor: pointer"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></button>
+</div>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #574E44">Her phone</h2>
+<div style="border-radius: 18px; background: #FFFDF9; border: 1px solid #E7DFD2; display: flex; flex-direction: column">
+<button type="button" style="display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 16px; border: none; background: transparent; color: #1E1A15; font-family: inherit; font-size: 16px; cursor: pointer; text-align: left"><span>Emergency number on Help</span><span style="font-weight: 700">India · 112</span></button>
+<div style="height: 1px; background: #F0E9DD; margin: 0 16px"></div>
+<div style="display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 0 16px">
+<span style="flex-grow: 1; font-size: 16px; line-height: 1.3">Show her city on public recipes</span>
+<button type="button" role="switch" aria-checked="false" aria-label="Show her city on public recipes" style="width: 52px; height: 32px; flex-shrink: 0; border-radius: 999px; border: none; background: #CFC4B3; padding: 3px; display: flex; justify-content: flex-start; cursor: pointer"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></button>
+</div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

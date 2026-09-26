@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Elder – Family told about missed check-in</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&amp;family=Newsreader:opsz,wght@6..72,500..700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBEDEA}
+a{color:#1E1A15}a:hover{color:#8A2A1F}
+a:focus-visible,button:focus-visible{outline:3px solid #1E1A15;outline-offset:3px}
+@keyframes nodPulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.7);opacity:0}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding: 64px 24px 28px; background: #FBEDEA; color: #1E1A15; font-family: 'Atkinson Hyperlegible', Verdana, sans-serif; display: flex; flex-direction: column; gap: 22px; overflow: hidden">
+<div style="position: relative; width: 88px; height: 88px">
+<div style="position: absolute; left: 0; top: 0; width: 88px; height: 88px; border-radius: 50%; background: #B23A2B; animation: nodPulse 2s ease-out infinite"></div>
+<div style="position: relative; width: 88px; height: 88px; border-radius: 50%; background: #B23A2B; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h1 style="margin: 0; font-family: 'Newsreader', Georgia, serif; font-size: 40px; line-height: 1.08; font-weight: 600; letter-spacing: -0.015em">We’ve let your family know</h1>
+<p style="margin: 0; font-size: 21px; line-height: 1.45; color: #574E44; text-wrap: pretty">You didn’t check in this morning, so Priya and Arjun were told at 11:00 AM. They may call you.</p>
+</div>
+<div style="display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 22px; background: #FFFDF9; border: 1.5px solid #F0C9C1">
+<div style="display: flex; flex-shrink: 0">
+<div style="width: 48px; height: 48px; border-radius: 50%; background: #F8E6C4; color: #5C4A2A; display: flex; align-items: center; justify-content: center; font-family: 'Newsreader', Georgia, serif; font-size: 24px; font-weight: 600; box-shadow: 0 0 0 3px #FFFDF9">P</div>
+<div style="width: 48px; height: 48px; margin-left: -12px; border-radius: 50%; background: #DDE6F0; color: #2B3F55; display: flex; align-items: center; justify-content: center; font-family: 'Newsreader', Georgia, serif; font-size: 24px; font-weight: 600; box-shadow: 0 0 0 3px #FFFDF9">A</div>
+</div>
+<span style="font-size: 19px; line-height: 1.35">Tap “I’m okay” and they’ll know right away.</span>
+</div>
+<div style="flex-grow: 1"></div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<a href="ElderThanks.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 12px; height: 92px; border-radius: 24px; background: #2D6A4F; color: #FFFFFF; font-family: 'Newsreader', Georgia, serif; font-size: 36px; font-weight: 600; text-decoration: none; box-shadow: 0 14px 30px -14px rgba(31, 77, 57, 0.8)"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>I’m okay</a>
+<a href="ElderHelpSent.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 12px; height: 72px; border-radius: 22px; background: #FFFDF9; border: 2.5px solid #B23A2B; color: #8A2A1F; font-size: 22px; font-weight: 700; text-decoration: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5"></path><path d="M12 16.5v.01"></path></svg>I need help</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

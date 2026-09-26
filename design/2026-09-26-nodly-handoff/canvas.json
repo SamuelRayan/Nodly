@@ -1,0 +1,833 @@
+{
+ "v": 3,
+ "attachments": {},
+ "boards": {
+  "ElderHelpCountdown.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E8 Help — countdown",
+   "w": 390,
+   "x": 3610,
+   "y": 0
+  },
+  "ElderHelpOnIt.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E10 Help — Priya is on it",
+   "w": 390,
+   "x": 4550,
+   "y": 0
+  },
+  "ElderHelpSent.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E9 Help — sent",
+   "w": 390,
+   "x": 4080,
+   "y": 0
+  },
+  "ElderHome.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E3 Home — not checked in",
+   "w": 390,
+   "x": 1100,
+   "y": 0
+  },
+  "ElderHomeDone.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E7 Home — checked in",
+   "w": 390,
+   "x": 2980,
+   "y": 0
+  },
+  "ElderMomentPhoto.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E6 Moment — photo",
+   "w": 390,
+   "x": 2510,
+   "y": 0
+  },
+  "ElderMoments.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E5 New moments",
+   "w": 390,
+   "x": 2040,
+   "y": 0
+  },
+  "ElderPaired.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E2 Paired",
+   "w": 390,
+   "x": 470,
+   "y": 0
+  },
+  "ElderThanks.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E4 Thank you",
+   "w": 390,
+   "x": 1570,
+   "y": 0
+  },
+  "ElderNudge.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E11 Missed check-in — reminder",
+   "w": 390,
+   "x": 5180,
+   "y": 0
+  },
+  "ElderMissedAlerted.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E12 Missed check-in — family told",
+   "w": 390,
+   "x": 5650,
+   "y": 0
+  },
+  "ElderRecipes.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E13 Recipes — my recipes",
+   "w": 390,
+   "x": 6280,
+   "y": 0
+  },
+  "ElderRecipeListening.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E14 Recipe — listening",
+   "w": 390,
+   "x": 6750,
+   "y": 0
+  },
+  "ElderRecipeReview.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E15 Recipe — review & share",
+   "w": 390,
+   "x": 7220,
+   "y": 0
+  },
+  "ElderRecipesTop.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E19 Recipes — top recipes",
+   "w": 390,
+   "x": 7690,
+   "y": 0
+  },
+  "ElderRecipeDetail.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E20 Recipe detail",
+   "w": 390,
+   "x": 8160,
+   "y": 0
+  },
+  "ElderCookedSend.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E21 Send your cooked photo",
+   "w": 390,
+   "x": 8630,
+   "y": 0
+  },
+  "ElderCookedSent.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E22 Cooked photo sent",
+   "w": 390,
+   "x": 9100,
+   "y": 0
+  },
+  "ElderCookedPhoto.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E16 Cooked photo from someone",
+   "w": 390,
+   "x": 9730,
+   "y": 0
+  },
+  "ElderReportConfirm.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E17 Report — confirm",
+   "w": 390,
+   "x": 10200,
+   "y": 0
+  },
+  "ElderReportDone.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E18 Report — done",
+   "w": 390,
+   "x": 10670,
+   "y": 0
+  },
+  "FamilySignIn.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F1 Sign in",
+   "w": 390,
+   "x": 0,
+   "y": 1264
+  },
+  "FamilyDashboard.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F2 Dashboard",
+   "w": 390,
+   "x": 470,
+   "y": 1264
+  },
+  "FamilyMoments.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F17 Moments tab",
+   "w": 390,
+   "x": 940,
+   "y": 1264
+  },
+  "FamilyPost.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F3 Post — photo selected",
+   "w": 390,
+   "x": 1570,
+   "y": 1264
+  },
+  "FamilyPostUploading.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F4 Post — uploading",
+   "w": 390,
+   "x": 2040,
+   "y": 1264
+  },
+  "FamilyPostSent.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F5 Post — sent, counts for today",
+   "w": 390,
+   "x": 2510,
+   "y": 1264
+  },
+  "FamilyPostFailed.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F6 Post — failed",
+   "w": 390,
+   "x": 2980,
+   "y": 1264
+  },
+  "FamilyHelpAlert.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F7 Help alert",
+   "w": 390,
+   "x": 3610,
+   "y": 1264
+  },
+  "FamilyLocked.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F8 Locked-feature sheet",
+   "w": 390,
+   "x": 4080,
+   "y": 1264
+  },
+  "FamilyDashboardLate.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F9 Dashboard — check-in late",
+   "w": 390,
+   "x": 4710,
+   "y": 1264
+  },
+  "FamilyMissedAlert.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F10 Missed check-in alert",
+   "w": 390,
+   "x": 5180,
+   "y": 1264
+  },
+  "FamilyRecipes.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F11 Recipes tab",
+   "w": 390,
+   "x": 5810,
+   "y": 1264
+  },
+  "FamilyRecipeDetail.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F12 Recipe detail — family view",
+   "w": 390,
+   "x": 6280,
+   "y": 1264
+  },
+  "FamilyRecipePublic.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F13 Recipe — anyone's view",
+   "w": 390,
+   "x": 6750,
+   "y": 1264
+  },
+  "FamilyCookedSend.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F14 Send a cooked photo",
+   "w": 390,
+   "x": 7220,
+   "y": 1264
+  },
+  "FamilyReportSheet.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F15 Report a photo",
+   "w": 390,
+   "x": 7850,
+   "y": 1264
+  },
+  "FamilySenderWarning.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F16 Warning to the sender",
+   "w": 390,
+   "x": 8320,
+   "y": 1264
+  },
+  "Main.dc.html": {
+   "h": 844,
+   "radius": 36,
+   "title": "E1 Pairing — code",
+   "w": 390,
+   "x": 0,
+   "y": 0
+  },
+  "FamilyEnterCode.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F18 Enter pairing code",
+   "w": 390,
+   "x": 0,
+   "y": 0,
+   "page": "more"
+  },
+  "FamilySetupElder.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F19 Set up your parent",
+   "w": 390,
+   "x": 470,
+   "y": 0,
+   "page": "more"
+  },
+  "FamilySettings.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F20 Check-in & alert settings",
+   "w": 390,
+   "x": 940,
+   "y": 0,
+   "page": "more"
+  },
+  "FamilyAmmasDay.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "F21 Amma's day (unlocked)",
+   "w": 390,
+   "x": 1410,
+   "y": 0,
+   "page": "more"
+  },
+  "ElderAllMoments.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "E23 All moments",
+   "w": 390,
+   "x": 1880,
+   "y": 0,
+   "page": "more"
+  },
+  "ElderHomeDark.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "ElderHome — dark",
+   "w": 390,
+   "x": 0,
+   "y": 0,
+   "page": "dark"
+  },
+  "ElderThanksDark.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "ElderThanks — dark",
+   "w": 390,
+   "x": 470,
+   "y": 0,
+   "page": "dark"
+  },
+  "ElderMomentPhotoDark.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "ElderMomentPhoto — dark",
+   "w": 390,
+   "x": 940,
+   "y": 0,
+   "page": "dark"
+  },
+  "ElderHelpCountdownDark.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "ElderHelpCountdown — dark",
+   "w": 390,
+   "x": 1410,
+   "y": 0,
+   "page": "dark"
+  },
+  "ElderRecipeDetailDark.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "ElderRecipeDetail — dark",
+   "w": 390,
+   "x": 1880,
+   "y": 0,
+   "page": "dark"
+  },
+  "FamilyDashboardDark.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "FamilyDashboard — dark",
+   "w": 390,
+   "x": 2510,
+   "y": 0,
+   "page": "dark"
+  },
+  "FamilyMomentsDark.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "FamilyMoments — dark",
+   "w": 390,
+   "x": 2980,
+   "y": 0,
+   "page": "dark"
+  },
+  "FamilyRecipesDark.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "FamilyRecipes — dark",
+   "w": 390,
+   "x": 3450,
+   "y": 0,
+   "page": "dark"
+  },
+  "FamilyPostDark.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "FamilyPost — dark",
+   "w": 390,
+   "x": 3920,
+   "y": 0,
+   "page": "dark"
+  },
+  "FoldElderHome.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "Unfolded — elder home",
+   "w": 780,
+   "x": 0,
+   "y": 0,
+   "page": "fold"
+  },
+  "FoldFamilyDashboard.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "Unfolded — family dashboard",
+   "w": 780,
+   "x": 860,
+   "y": 0,
+   "page": "fold"
+  },
+  "SplitFamilyDashboard.dc.html": {
+   "h": 420,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "Split screen — family dashboard",
+   "w": 390,
+   "x": 1880,
+   "y": 0,
+   "page": "fold"
+  },
+  "SplitFamilyHelpAlert.dc.html": {
+   "h": 420,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "Split screen — Help alert",
+   "w": 390,
+   "x": 2350,
+   "y": 0,
+   "page": "fold"
+  },
+  "NextMusic.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "Coming next — Music",
+   "w": 390,
+   "x": 0,
+   "y": 0,
+   "page": "next"
+  },
+  "NextVoice.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "Coming next — Voice assistant",
+   "w": 390,
+   "x": 470,
+   "y": 0,
+   "page": "next"
+  },
+  "NextLauncher.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "Coming next — Launcher (Nodly as home screen)",
+   "w": 390,
+   "x": 940,
+   "y": 0,
+   "page": "next"
+  },
+  "NextWidgets.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "Coming next — Widgets",
+   "w": 390,
+   "x": 1410,
+   "y": 0,
+   "page": "next"
+  },
+  "NextLiveActivity.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 36,
+   "title": "Coming next — Live alert on lock screen",
+   "w": 390,
+   "x": 1880,
+   "y": 0,
+   "page": "next"
+  }
+ },
+ "createdOnFiles": {
+  "at": "2026-09-25T19:37:40Z",
+  "v": 1
+ },
+ "designSystems": [],
+ "launch": {
+  "view": "canvas"
+ },
+ "notes": {
+  "tElderDaily": {
+   "kind": "title1",
+   "maxW": 2270,
+   "text": "Elder · Daily check-in",
+   "w": 240,
+   "x": 1100,
+   "y": -300
+  },
+  "tElderHelp": {
+   "kind": "title1",
+   "maxW": 1330,
+   "text": "Elder · Help",
+   "w": 240,
+   "x": 3610,
+   "y": -300
+  },
+  "tElderPair": {
+   "kind": "title1",
+   "maxW": 860,
+   "text": "Elder · Pairing",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "tElderMissed": {
+   "kind": "title1",
+   "maxW": 860,
+   "text": "Elder · Missed check-in",
+   "w": 240,
+   "x": 5180,
+   "y": -300
+  },
+  "tElderRecipes": {
+   "kind": "title1",
+   "maxW": 3210,
+   "text": "Elder · Recipes",
+   "w": 240,
+   "x": 6280,
+   "y": -300
+  },
+  "tElderReport": {
+   "kind": "title1",
+   "maxW": 1330,
+   "text": "Elder · Cooked photos & reporting",
+   "w": 240,
+   "x": 9730,
+   "y": -300
+  },
+  "tFamHome": {
+   "kind": "title1",
+   "maxW": 1330,
+   "text": "Family · Sign in, home & moments",
+   "w": 240,
+   "x": 0,
+   "y": 964
+  },
+  "tFamPost": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "Family · Share a moment",
+   "w": 240,
+   "x": 1570,
+   "y": 964
+  },
+  "tFamHelp": {
+   "kind": "title1",
+   "maxW": 860,
+   "text": "Family · Help & unlock",
+   "w": 240,
+   "x": 3610,
+   "y": 964
+  },
+  "tFamMissed": {
+   "kind": "title1",
+   "maxW": 860,
+   "text": "Family · Missed check-in",
+   "w": 240,
+   "x": 4710,
+   "y": 964
+  },
+  "tFamRecipes": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "Family · Recipes & cooked photos",
+   "w": 240,
+   "x": 5810,
+   "y": 964
+  },
+  "tFamReport": {
+   "kind": "title1",
+   "maxW": 860,
+   "text": "Family · Reporting",
+   "w": 240,
+   "x": 7850,
+   "y": 964
+  },
+  "tMore": {
+   "kind": "title1",
+   "maxW": 2270,
+   "text": "Filling the gaps",
+   "w": 240,
+   "x": 0,
+   "y": -300,
+   "page": "more"
+  },
+  "tDarkElder": {
+   "kind": "title1",
+   "maxW": 2270,
+   "text": "Dark · Elder",
+   "w": 240,
+   "x": 0,
+   "y": -300,
+   "page": "dark"
+  },
+  "tDarkFam": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "Dark · Family",
+   "w": 240,
+   "x": 2510,
+   "y": -300,
+   "page": "dark"
+  },
+  "tFold": {
+   "kind": "title1",
+   "maxW": 1640,
+   "text": "Unfolded (Galaxy Z Fold)",
+   "w": 240,
+   "x": 0,
+   "y": -300,
+   "page": "fold"
+  },
+  "tSplit": {
+   "kind": "title1",
+   "maxW": 860,
+   "text": "Split screen",
+   "w": 240,
+   "x": 1880,
+   "y": -300,
+   "page": "fold"
+  },
+  "tNext": {
+   "kind": "title1",
+   "maxW": 2270,
+   "text": "Coming next",
+   "w": 240,
+   "x": 0,
+   "y": -300,
+   "page": "next"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "ElderPaired.dc.html",
+  "ElderHome.dc.html",
+  "ElderThanks.dc.html",
+  "ElderMoments.dc.html",
+  "ElderMomentPhoto.dc.html",
+  "ElderHomeDone.dc.html",
+  "ElderHelpCountdown.dc.html",
+  "ElderHelpSent.dc.html",
+  "ElderHelpOnIt.dc.html",
+  "ElderNudge.dc.html",
+  "ElderMissedAlerted.dc.html",
+  "ElderRecipes.dc.html",
+  "ElderRecipeListening.dc.html",
+  "ElderRecipeReview.dc.html",
+  "ElderRecipesTop.dc.html",
+  "ElderRecipeDetail.dc.html",
+  "ElderCookedSend.dc.html",
+  "ElderCookedSent.dc.html",
+  "ElderCookedPhoto.dc.html",
+  "ElderReportConfirm.dc.html",
+  "ElderReportDone.dc.html",
+  "FamilySignIn.dc.html",
+  "FamilyDashboard.dc.html",
+  "FamilyMoments.dc.html",
+  "FamilyPost.dc.html",
+  "FamilyPostUploading.dc.html",
+  "FamilyPostSent.dc.html",
+  "FamilyPostFailed.dc.html",
+  "FamilyHelpAlert.dc.html",
+  "FamilyLocked.dc.html",
+  "FamilyDashboardLate.dc.html",
+  "FamilyMissedAlert.dc.html",
+  "FamilyRecipes.dc.html",
+  "FamilyRecipeDetail.dc.html",
+  "FamilyRecipePublic.dc.html",
+  "FamilyCookedSend.dc.html",
+  "FamilyReportSheet.dc.html",
+  "FamilySenderWarning.dc.html",
+  "FamilyEnterCode.dc.html",
+  "FamilySetupElder.dc.html",
+  "FamilySettings.dc.html",
+  "FamilyAmmasDay.dc.html",
+  "ElderAllMoments.dc.html",
+  "ElderHomeDark.dc.html",
+  "ElderThanksDark.dc.html",
+  "ElderMomentPhotoDark.dc.html",
+  "ElderHelpCountdownDark.dc.html",
+  "ElderRecipeDetailDark.dc.html",
+  "FamilyDashboardDark.dc.html",
+  "FamilyMomentsDark.dc.html",
+  "FamilyRecipesDark.dc.html",
+  "FamilyPostDark.dc.html",
+  "FoldElderHome.dc.html",
+  "FoldFamilyDashboard.dc.html",
+  "SplitFamilyDashboard.dc.html",
+  "SplitFamilyHelpAlert.dc.html",
+  "NextMusic.dc.html",
+  "NextVoice.dc.html",
+  "NextLauncher.dc.html",
+  "NextWidgets.dc.html",
+  "NextLiveActivity.dc.html"
+ ],
+ "pages": [
+  {
+   "id": "demo",
+   "name": "Demo screens"
+  },
+  {
+   "id": "more",
+   "name": "More screens"
+  },
+  {
+   "id": "dark",
+   "name": "Dark mode"
+  },
+  {
+   "id": "fold",
+   "name": "Foldable & split screen"
+  },
+  {
+   "id": "next",
+   "name": "Coming next"
+  }
+ ],
+ "title": "Nodly app screens"
+}

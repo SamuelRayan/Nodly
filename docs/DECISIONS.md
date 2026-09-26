@@ -180,3 +180,35 @@ Format: **what** we decided, then *why*.
   *Before, tapping an elder always minted a new pairing code, and nothing in the app could disconnect a phone, although the elder's leave screen and the PIN screen both said the family could. Status comes from one `GET /devices` per elder row. That's fine for a few elders; Phase 4's status data can replace it.*
 - **D68. Two-device tests can run one emulator at a time.** Pairing goes through the server, so the family emulator can be off while the elder emulator pairs.
   *Each emulator process takes about 3 GB of RAM, even at a 1.5 GB guest. With 3.3 GB free, a second one would have pushed the PC into swap.*
+
+## Shipaton sprint (2026-09-26 → 2026-10-01)
+
+- **D69. The Shipaton target is the Next Gen award.**
+  - What judges get: a demo video under 2 minutes and this repo, public under **MIT**.
+  - Purchases run through RevenueCat's **Test Store**; there's no store release before the deadline (30 Sep, 11:45 PM PDT = 1 Oct, 12:15 PM IST).
+  *Every other category needs a live store listing. An app still in review at the deadline doesn't qualify, and RevenueCat advises submitting a week ahead. Next Gen is judged on the video and the repo.*
+  - **Pulled forward, with the tests CLAUDE.md requires:** slices of Phases 4–8, namely check-ins, Help, moments (photo and voice first), Plus with the Test Store, and the design's screens.
+  - **Cut until after Shipaton:**
+    - recipes, cooked photos and reporting
+    - AI, music, launcher, widgets
+    - live presence, SMS/voice escalation
+    - foldable layouts, iOS, Google sign-in
+  - The Test Store key never ships in a store build (CLAUDE.md §10).
+- **D70. The Claude Design handoff of 2026-09-26 (`design/2026-09-26-nodly-handoff/`) is the visual reference.**
+  - **Fonts:** Newsreader for headings (500–700, a variable font set to optical size 36) and Atkinson Hyperlegible for everything else (400/700). Both are under the SIL Open Font License, embedded with the expo-font config plugin.
+  - **Palette:** the design's colours replace the starting tokens in CLAUDE.md §15. Checked against its contrast rules:
+    - body text 7.5:1 or better on every background, in light and dark
+    - labels on the green, red and alert buttons 5.4:1 or better
+  - **Icons:** drawn from the design's logo by `mobile/scripts/make-icons.py`.
+- **D71. Where the design and CLAUDE.md differ, for Shipaton:**
+  - **Pairing:** the direction stays as built, with the family showing the code and the elder typing or scanning it. The design has the elder's phone show a 6-digit code instead. The screens are restyled now, and the direction switches after Shipaton.
+  - **Plus rules:** CLAUDE.md §10's money rules stand. A moment on day D gives Plus through D+1 on the family clock, and a Day Pass lasts 24 hours from purchase. The design's copy ("until midnight") is changed to match.
+  - **Help countdown:** 5 seconds (§8; the design shows 3). It's a config value.
+  - **Elder body text:** at least 20 pt (§15; the design allows 18).
+  - **Sign-in:** "Continue with Google" is dropped, email code only. §5 would require Sign in with Apple alongside it.
+  - **Check-in settings:** they follow §7's engine (reminder time, due-by time, grace period).
+  - **"Amma's day" consent:** it's gated behind the elder's consent (§13), asked in plain words right after pairing. The design has no consent step.
+- **D72. Packages added for the second development build (approved):**
+  - **Mobile:** `react-native-purchases` and `react-native-purchases-ui` 10.10.2 (Test Store needs 9.9.0+ on Android), `expo-image-picker`, `expo-audio` (+ its required peer `expo-asset`), `expo-video`, `expo-file-system`, `expo-haptics`.
+  - Background audio and video playback are off, so there's no foreground service to declare.
+  - **Backend:** `pillow` and `imagehash`, for the moments photo checks.

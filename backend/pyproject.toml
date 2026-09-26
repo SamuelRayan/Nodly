@@ -19,6 +19,8 @@ dependencies = [
     "phonenumbers>=8.13",  # the full package (not -lite): we use its timezone metadata
     "tzdata>=2025.2",  # pinned IANA data so zoneinfo + zone lists match on Windows, conda and Linux
     "pyjwt[crypto]>=2.10",  # Supabase access tokens (ES256/RS256 via JWKS)
+    "pillow>=11.0",  # moments: photo checks and thumbnails
+    "imagehash>=4.3",  # moments: perceptual-hash dedupe of photos
 ]
 
 [project.optional-dependencies]

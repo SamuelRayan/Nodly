@@ -30,7 +30,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: APP_ID,
     adaptiveIcon: {
-      backgroundColor: '#F6F1E7',
+      backgroundColor: '#2D6A4F',
       foregroundImage: './assets/images/android-icon-foreground.png',
       backgroundImage: './assets/images/android-icon-background.png',
       monochromeImage: './assets/images/android-icon-monochrome.png',
@@ -43,19 +43,75 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#F6F1E7',
+        backgroundColor: '#FAF6EE',
         image: './assets/images/splash-icon.png',
-        imageWidth: 76,
-        dark: { backgroundColor: '#1C1A17', image: './assets/images/splash-icon.png' },
+        imageWidth: 96,
+        dark: { backgroundColor: '#16130F', image: './assets/images/splash-icon.png' },
       },
     ],
     'expo-secure-store',
     'expo-localization',
     [
       'expo-camera',
-      { cameraPermission: 'Nodly uses the camera to scan the code your family shows you.' },
+      {
+        cameraPermission:
+          'Nodly uses the camera to scan your family’s code and to take photos to share with them.',
+      },
     ],
-    ['expo-notifications', { color: '#245A41' }],
+    ['expo-notifications', { color: '#2D6A4F' }],
+    [
+      'expo-image-picker',
+      {
+        photosPermission: 'Nodly opens your photos so you can share one with your family.',
+        cameraPermission: 'Nodly uses the camera to take photos and videos to share with your family.',
+        microphonePermission: 'Nodly uses the microphone to record sound with your videos.',
+      },
+    ],
+    [
+      'expo-audio',
+      {
+        microphonePermission: 'Nodly uses the microphone to record voice notes for your family.',
+        recordAudioAndroid: true,
+        // Voice notes play while the app is open; no background service needed.
+        enableBackgroundPlayback: false,
+      },
+    ],
+    ['expo-video', { supportsBackgroundPlayback: false, supportsPictureInPicture: false }],
+    [
+      // The design's fonts (SIL Open Font License, see assets/fonts/OFL-*.txt), embedded at
+      // build time. Use fontFamily + fontWeight: https://docs.expo.dev/develop/user-interface/fonts/
+      'expo-font',
+      {
+        android: {
+          fonts: [
+            {
+              fontFamily: 'Atkinson Hyperlegible',
+              fontDefinitions: [
+                { path: './assets/fonts/atkinson_hyperlegible_regular.ttf', weight: 400 },
+                { path: './assets/fonts/atkinson_hyperlegible_bold.ttf', weight: 700 },
+              ],
+            },
+            {
+              // Variable font: one file, one face per weight, set for display sizes (opsz 36).
+              fontFamily: 'Newsreader',
+              path: './assets/fonts/newsreader_variable.ttf',
+              fontDefinitions: [
+                { weight: 500, axes: { opsz: 36 } },
+                { weight: 600, axes: { opsz: 36 } },
+                { weight: 700, axes: { opsz: 36 } },
+              ],
+            },
+          ],
+        },
+        ios: {
+          fonts: [
+            './assets/fonts/atkinson_hyperlegible_regular.ttf',
+            './assets/fonts/atkinson_hyperlegible_bold.ttf',
+            './assets/fonts/newsreader_variable.ttf',
+          ],
+        },
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

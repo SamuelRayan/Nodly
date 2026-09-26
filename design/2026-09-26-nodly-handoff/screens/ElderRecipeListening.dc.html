@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Elder – Telling a recipe</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&amp;family=Newsreader:opsz,wght@6..72,500..700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FAF6EE}
+a{color:#1E1A15}a:hover{color:#2D6A4F}
+a:focus-visible,button:focus-visible{outline:3px solid #1E1A15;outline-offset:3px}
+@keyframes nodRing{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.75);opacity:0}}
+@keyframes nodBlink{50%{opacity:0}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding: 56px 20px 28px; background: #FAF6EE; color: #1E1A15; font-family: 'Atkinson Hyperlegible', Verdana, sans-serif; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="ElderRecipes.dc.html" style="display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 22px 0 16px; border-radius: 999px; border: 2px solid #1E1A15; color: #1E1A15; font-size: 20px; font-weight: 700; text-decoration: none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg>Cancel</a>
+<span style="display: inline-flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; color: #8A2A1F"><span style="width: 12px; height: 12px; border-radius: 50%; background: #B23A2B; animation: nodBlink 1.2s steps(1) infinite"></span>1:24</span>
+</div>
+<h1 style="margin: 0 4px; font-family: 'Newsreader', Georgia, serif; font-size: 40px; line-height: 1.05; font-weight: 600; letter-spacing: -0.015em">I’m listening…</h1>
+<div aria-live="polite" style="padding: 20px; border-radius: 24px; background: #FFFDF9; border: 1.5px solid #E7DFD2; font-size: 22px; line-height: 1.5">
+<span style="color: #6B6157">This is my tomato rasam. First, soak a lemon-sized ball of tamarind in warm water. </span><span style="color: #1E1A15; font-weight: 700">Then boil two chopped tomatoes with turmeric and salt</span><span aria-hidden="true" style="display: inline-block; width: 3px; height: 24px; margin-left: 3px; vertical-align: -4px; background: #1E1A15; animation: nodBlink 1s steps(1) infinite"></span>
+</div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px">
+<div style="position: relative; width: 128px; height: 128px">
+<div style="position: absolute; left: 0; top: 0; width: 128px; height: 128px; border-radius: 50%; background: #E8A33D; animation: nodRing 1.8s ease-out infinite"></div>
+<div style="position: absolute; left: 0; top: 0; width: 128px; height: 128px; border-radius: 50%; background: #E8A33D; animation: nodRing 1.8s 0.9s ease-out infinite"></div>
+<div style="position: relative; width: 128px; height: 128px; border-radius: 50%; background: #1E1A15; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path></svg></div>
+</div>
+<p style="margin: 0; font-size: 19px; color: #574E44; text-align: center">Take your time. Say “done” when you finish.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<button type="button" style="display: flex; align-items: center; justify-content: center; gap: 10px; height: 76px; border-radius: 22px; border: 2px solid #1E1A15; background: #FFFDF9; color: #1E1A15; font-family: inherit; font-size: 23px; font-weight: 700; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg>Pause</button>
+<a href="ElderRecipeReview.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 10px; height: 76px; border-radius: 22px; background: #2D6A4F; color: #FFFFFF; font-size: 23px; font-weight: 700; text-decoration: none; box-shadow: 0 12px 26px -14px rgba(31, 77, 57, 0.75)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>I’m done</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
