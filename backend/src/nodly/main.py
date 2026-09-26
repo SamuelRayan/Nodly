@@ -14,6 +14,7 @@ from nodly.api import (
     elders,
     families,
     health,
+    help,
     invites,
     me,
     meta,
@@ -78,6 +79,7 @@ def create_app(
     app.include_router(invites.router)
     app.include_router(elders.router)
     app.include_router(checkins.router)
+    app.include_router(help.router)
     app.include_router(pairing.router)
     app.include_router(device.router)
     app.include_router(meta.router)

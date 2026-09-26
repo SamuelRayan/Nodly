@@ -2472,6 +2472,475 @@
         }
       }
     },
+    "/v1/families/{family_id}/help": {
+      "get": {
+        "tags": [
+          "help"
+        ],
+        "summary": "Live Help",
+        "description": "Help requests nobody has closed yet, newest first (tests included, and labelled).",
+        "operationId": "live_help",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "family_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Family Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HelpOut"
+                  },
+                  "title": "Response Live Help"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/help/{request_id}": {
+      "get": {
+        "tags": [
+          "help"
+        ],
+        "summary": "Get Help",
+        "description": "One request with its whole timeline.",
+        "operationId": "get_help",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/help/{request_id}/ack": {
+      "post": {
+        "tags": [
+          "help"
+        ],
+        "summary": "Ack Help",
+        "description": "\"I'm on it\". The first one stops the repeats, tells the rest of the family and shows\non the elder's screen.",
+        "operationId": "ack_help",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/help/{request_id}/resolve": {
+      "post": {
+        "tags": [
+          "help"
+        ],
+        "summary": "Resolve Help",
+        "description": "Close a request, with an optional note for the timeline.",
+        "operationId": "resolve_help",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/elders/{elder_id}/help/test": {
+      "post": {
+        "tags": [
+          "help"
+        ],
+        "summary": "Test Help",
+        "description": "A clearly labelled test alert to every family phone, to check they all ring (§8).\nLimited to a few a day per family; real Help never is.",
+        "operationId": "test_help",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many failed attempts; see the Retry-After header",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/elders/{elder_id}/pairing-codes": {
       "post": {
         "tags": [
@@ -3080,6 +3549,153 @@
           },
           "422": {
             "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ]
+      }
+    },
+    "/v1/device/help": {
+      "get": {
+        "tags": [
+          "device"
+        ],
+        "summary": "Device Current Help",
+        "description": "The open request, if any, for the elder's \"Your family has been alerted\" screen:\nwho got it and who's on it.",
+        "operationId": "device_current_help",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/HelpOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Device Current Help"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "device"
+        ],
+        "summary": "Device Help",
+        "description": "Ask the family for help. Pressing again while a request is open returns that one.",
+        "operationId": "device_help",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceHelpIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ]
+      }
+    },
+    "/v1/device/help/cancel": {
+      "post": {
+        "tags": [
+          "device"
+        ],
+        "summary": "Device Cancel Help",
+        "description": "\"I'm okay now\": closes the open request and tells the family.",
+        "operationId": "device_cancel_help",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3726,6 +4342,81 @@
         },
         "type": "object",
         "title": "DeviceCheckinIn"
+      },
+      "DeviceHelpIn": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/HelpKind",
+            "description": "help: urgent. call_me: \"Please call me\", not urgent",
+            "default": "help"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 90.0,
+                "minimum": -90.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 180.0,
+                "minimum": -180.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "location_accuracy_m": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Accuracy M"
+          },
+          "battery_percent": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Battery Percent"
+          },
+          "network": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Network",
+            "description": "wifi, cellular, ..."
+          }
+        },
+        "type": "object",
+        "title": "DeviceHelpIn"
       },
       "DeviceMe": {
         "properties": {
@@ -4428,6 +5119,308 @@
         "type": "object",
         "title": "HealthOut"
       },
+      "HelpEventKind": {
+        "type": "string",
+        "enum": [
+          "created",
+          "pushed",
+          "acknowledged",
+          "resolved",
+          "cancelled",
+          "sms_skipped",
+          "voice_skipped"
+        ],
+        "title": "HelpEventKind"
+      },
+      "HelpEventOut": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/HelpEventKind"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "The family member involved, if any"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "at",
+          "name"
+        ],
+        "title": "HelpEventOut"
+      },
+      "HelpKind": {
+        "type": "string",
+        "enum": [
+          "help",
+          "call_me"
+        ],
+        "title": "HelpKind"
+      },
+      "HelpOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "elder_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Elder Id"
+          },
+          "elder_name": {
+            "type": "string",
+            "title": "Elder Name",
+            "description": "How the family refers to the elder"
+          },
+          "elder_phone_e164": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elder Phone E164"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/HelpKind"
+          },
+          "status": {
+            "$ref": "#/components/schemas/HelpStatus"
+          },
+          "is_test": {
+            "type": "boolean",
+            "title": "Is Test"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "acked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acked At"
+          },
+          "acked_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acked By Name"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "closed_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed By Name"
+          },
+          "resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Note"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "location_accuracy_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Accuracy M"
+          },
+          "battery_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Battery Percent"
+          },
+          "network": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Network"
+          },
+          "last_checkin_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Checkin At"
+          },
+          "recipients": {
+            "items": {
+              "$ref": "#/components/schemas/HelpRecipient"
+            },
+            "type": "array",
+            "title": "Recipients"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/HelpEventOut"
+            },
+            "type": "array",
+            "title": "Timeline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "elder_id",
+          "elder_name",
+          "elder_phone_e164",
+          "kind",
+          "status",
+          "is_test",
+          "created_at",
+          "acked_at",
+          "acked_by_name",
+          "closed_at",
+          "closed_by_name",
+          "resolution_note",
+          "latitude",
+          "longitude",
+          "location_accuracy_m",
+          "battery_percent",
+          "network",
+          "last_checkin_at",
+          "recipients",
+          "timeline"
+        ],
+        "title": "HelpOut"
+      },
+      "HelpRecipient": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "delivered": {
+            "type": "boolean",
+            "title": "Delivered",
+            "description": "Their phone accepted at least one alert"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "name",
+          "delivered"
+        ],
+        "title": "HelpRecipient"
+      },
+      "HelpStatus": {
+        "type": "string",
+        "enum": [
+          "open",
+          "acknowledged",
+          "resolved",
+          "cancelled"
+        ],
+        "title": "HelpStatus"
+      },
       "InviteCreated": {
         "properties": {
           "id": {
@@ -5124,6 +6117,24 @@
         ],
         "title": "ReminderOut"
       },
+      "ResolveIn": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "ResolveIn"
+      },
       "RotatedToken": {
         "properties": {
           "device_token": {
@@ -5367,6 +6378,10 @@
     {
       "name": "checkins",
       "description": "An elder's daily check-in, for the family: today's status, the last 7 days, \"mark okay\" and \"I'm on it\"."
+    },
+    {
+      "name": "help",
+      "description": "Help requests for the family: live alerts, \"I'm on it\", resolve, and test alerts. Not an emergency service."
     },
     {
       "name": "device",

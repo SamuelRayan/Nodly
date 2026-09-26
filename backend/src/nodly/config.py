@@ -84,6 +84,17 @@ class Settings(BaseSettings):
     # The check-in engine's tick (CLAUDE.md §7).
     checkin_tick_seconds: float = Field(default=60.0, gt=0)
 
+    # Help's escalation ladder (CLAUDE.md §8). The tick checks often; repeats go out every
+    # HELP_REPEAT_SECONDS until someone says "I'm on it", for at most HELP_REPEAT_MINUTES.
+    help_tick_seconds: float = Field(default=10.0, gt=0)
+    help_repeat_seconds: float = Field(default=60.0, gt=0)
+    help_repeat_minutes: float = Field(default=15.0, gt=0)
+    # SMS and voice-call steps (Phase 15; logged as skipped until then).
+    help_sms_after_seconds: float = Field(default=120.0, gt=0)
+    help_voice_after_seconds: float = Field(default=300.0, gt=0)
+    # Family test alerts are the only rate-limited kind (§8).
+    help_tests_per_day: int = Field(default=3, ge=1)
+
     @property
     def supabase_issuer(self) -> str | None:
         return f"{self.supabase_url.rstrip('/')}/auth/v1" if self.supabase_url else None

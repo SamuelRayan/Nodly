@@ -9,6 +9,7 @@ from nodly.models.checkins import (
     EngineAction,
     EngineActionKind,
 )
+from nodly.models.help import HelpEvent, HelpEventKind, HelpKind, HelpRequest, HelpStatus
 from nodly.models.identity import (
     ActorType,
     AuditLog,
@@ -43,6 +44,11 @@ __all__ = [
     "Family",
     "FamilyMember",
     "FamilyRole",
+    "HelpEvent",
+    "HelpEventKind",
+    "HelpKind",
+    "HelpRequest",
+    "HelpStatus",
     "Invite",
     "InviteKind",
     "Job",

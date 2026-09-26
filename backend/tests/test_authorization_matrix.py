@@ -19,6 +19,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nodly.config import Settings
+from nodly.help.service import open_request
 from nodly.main import create_app
 from nodly.models import (
     CheckinAlert,
@@ -26,6 +27,8 @@ from nodly.models import (
     ElderDevice,
     Family,
     FamilyMember,
+    HelpKind,
+    HelpRequest,
     Invite,
     InviteKind,
     User,
@@ -293,6 +296,23 @@ async def open_missed_alert(world: World) -> dict[str, Any]:
     return {}
 
 
+async def fresh_help(world: World) -> dict[str, Any]:
+    """A (test) Help request for elder A: tests don't count toward one-live-per-elder."""
+    request = HelpRequest(
+        elder_id=world.elder_a, family_id=world.family_a, kind="help", is_test=True
+    )
+    world.session.add(request)
+    await world.session.commit()
+    return {"request_id": request.id}
+
+
+async def elder_a_needs_help(world: World) -> dict[str, Any]:
+    """A live Help request from elder A's phone, so there's one to cancel."""
+    elder = await world.session.get_one(Elder, world.elder_a)
+    await open_request(world.session, elder, datetime.now(UTC), HelpKind.help)
+    return {}
+
+
 async def transfer_target(world: World) -> dict[str, Any]:
     return {"__body__": {"user_id": str(world.member_a.id)}}
 
@@ -406,6 +426,29 @@ CASES = [
     ),
     Case("GET", "/v1/device/today", device_only()),
     Case("POST", "/v1/device/checkin", device_only(), body={"source": "app"}),
+    # Help (Phase 5)
+    Case("GET", "/v1/families/{family_id}/help", family_a(member=200, organizer=200)),
+    Case("GET", "/v1/help/{request_id}", family_a(member=200, organizer=200), prepare=fresh_help),
+    Case(
+        "POST", "/v1/help/{request_id}/ack", family_a(member=200, organizer=200), prepare=fresh_help
+    ),
+    Case(
+        "POST",
+        "/v1/help/{request_id}/resolve",
+        family_a(member=200, organizer=200),
+        body={},
+        prepare=fresh_help,
+    ),
+    Case("POST", "/v1/elders/{elder_id}/help/test", family_a(member=201, organizer=201)),
+    Case("POST", "/v1/device/help", device_only(), body={"kind": "help"}),
+    Case("GET", "/v1/device/help", device_only()),
+    # Elder B's phone has nothing open to cancel.
+    Case(
+        "POST",
+        "/v1/device/help/cancel",
+        device_only(200, other_device=409),
+        prepare=elder_a_needs_help,
+    ),
 ]
 
 

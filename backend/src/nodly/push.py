@@ -70,6 +70,22 @@ async def family_tokens(
     return list(await session.scalars(query))
 
 
+async def family_tokens_by_user(
+    session: AsyncSession, family_id: uuid.UUID
+) -> list[tuple[uuid.UUID, str]]:
+    """(user id, token) for every live token of every family member."""
+    rows = await session.execute(
+        select(FamilyMember.user_id, PushToken.token)
+        .join(PushToken, PushToken.user_id == FamilyMember.user_id)
+        .where(
+            FamilyMember.family_id == family_id,
+            PushToken.provider == PushProvider.expo,
+            PushToken.disabled_at.is_(None),
+        )
+    )
+    return [(user_id, token) for user_id, token in rows]
+
+
 async def elder_tokens(session: AsyncSession, elder_id: uuid.UUID) -> list[str]:
     """Live push tokens of an elder's connected (not disconnected) phones."""
     query = (

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nodly.api.checkins import ScheduleOut, schedule_out
 from nodly.api.common import SettingsDep, client_ip, problems
+from nodly.api.help import HelpOut, help_out
 from nodly.api.pairing import FamilyRef
 from nodly.api.push_tokens import PushTokenIn
 from nodly.api.schemas import DeviceOut, ElderOut, device_out, elder_out
@@ -20,7 +21,8 @@ from nodly.checkins.service import elder_day, record_checkin
 from nodly.clock import utcnow
 from nodly.db import SessionDep
 from nodly.errors import ConflictError, InvalidInputError
-from nodly.models import ActorType, CheckinSource, FamilyMember, FamilyRole, User
+from nodly.help.service import PhoneInfo, close, live_request, open_request
+from nodly.models import ActorType, CheckinSource, FamilyMember, FamilyRole, HelpKind, User
 from nodly.push import register_push_token
 from nodly.security.credentials import generate_device_token, hash_device_token
 from nodly.security.pins import verify_pin
@@ -220,3 +222,60 @@ async def device_checkin(
     )
     await session.commit()
     return await _device_today(session, access)
+
+
+# ---------------------------------------------------------------- Help (CLAUDE.md §8)
+
+
+class DeviceHelpIn(BaseModel):
+    kind: HelpKind = Field(
+        default=HelpKind.help, description='help: urgent. call_me: "Please call me", not urgent'
+    )
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    location_accuracy_m: float | None = Field(default=None, ge=0)
+    battery_percent: int | None = Field(default=None, ge=0, le=100)
+    network: str | None = Field(default=None, max_length=20, description="wifi, cellular, ...")
+
+
+class NoLiveHelpError(ConflictError):
+    code = "no_live_help"
+    title = "There's no open Help request"
+
+
+@router.post("/help", responses=problems(401, 422))
+async def device_help(body: DeviceHelpIn, access: CurrentDevice, session: SessionDep) -> HelpOut:
+    """Ask the family for help. Pressing again while a request is open returns that one."""
+    request, _ = await open_request(
+        session,
+        access.elder,
+        utcnow(),
+        body.kind,
+        device_id=access.device.id,
+        info=PhoneInfo(
+            latitude=body.latitude,
+            longitude=body.longitude,
+            accuracy_m=body.location_accuracy_m,
+            battery_percent=body.battery_percent,
+            network=body.network,
+        ),
+    )
+    return await help_out(session, request)
+
+
+@router.get("/help", responses=problems(401))
+async def device_current_help(access: CurrentDevice, session: SessionDep) -> HelpOut | None:
+    """The open request, if any, for the elder's "Your family has been alerted" screen:
+    who got it and who's on it."""
+    request = await live_request(session, access.elder.id)
+    return await help_out(session, request) if request else None
+
+
+@router.post("/help/cancel", responses=problems(401, 409))
+async def device_cancel_help(access: CurrentDevice, session: SessionDep) -> HelpOut:
+    """ "I'm okay now": closes the open request and tells the family."""
+    request = await live_request(session, access.elder.id)
+    if request is None:
+        raise NoLiveHelpError("Nothing to cancel.")
+    await close(session, request, utcnow(), by_elder=True)
+    return await help_out(session, request)

@@ -42,6 +42,11 @@ TAGS: list[dict[str, Any]] = [
         "description": "An elder's daily check-in, for the family: today's status, the last "
         '7 days, "mark okay" and "I\'m on it".',
     },
+    {
+        "name": "help",
+        "description": 'Help requests for the family: live alerts, "I\'m on it", resolve, and '
+        "test alerts. Not an emergency service.",
+    },
     {"name": "device", "description": "Called by a paired elder phone with its device token."},
     {"name": "meta", "description": "Reference data: timezones and countries. No auth."},
     {"name": "health", "description": "Liveness and readiness probes."},
