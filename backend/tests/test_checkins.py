@@ -473,6 +473,20 @@ async def test_status_for_an_elder_without_a_phone_or_paused(
         assert (await status(api, home, priya))["status"] == "no_phone"
 
 
+async def test_a_phone_set_up_after_the_due_time_starts_tomorrow_on_screen(
+    api: httpx.AsyncClient, session: AsyncSession, fake_supabase: FakeSupabase
+) -> None:
+    home, priya, _ = await signed_in_home(session, fake_supabase)
+    home.device.created_at = DUE + timedelta(minutes=20)
+    await session.commit()
+    with time_machine.travel(MISSED + timedelta(minutes=5), tick=False):
+        assert (await status(api, home, priya))["status"] == "starts_tomorrow"
+        today = (await api.get("/v1/device/today", headers=device_headers(home))).json()
+    assert today["watched_today"] is False
+    with time_machine.travel(REMIND + timedelta(days=1), tick=False):
+        assert (await status(api, home, priya))["status"] == "waiting"
+
+
 async def test_the_week_shows_okay_and_missed_days(
     api: httpx.AsyncClient, session: AsyncSession, fake_supabase: FakeSupabase
 ) -> None:

@@ -15,6 +15,15 @@ export default function ElderDetail() {
   const elder = useElder(elderId);
   const devices = useDevices(elderId);
 
+  const testAlert = useMutation({
+    mutationFn: () =>
+      unwrap(
+        api.POST('/v1/elders/{elder_id}/help/test', { params: { path: { elder_id: elderId } } }),
+      ),
+    onSuccess: (help) =>
+      router.push({ pathname: '/help/[requestId]', params: { requestId: help.id } }),
+  });
+
   const disconnect = useMutation({
     mutationFn: (deviceId: string) =>
       unwrap(
@@ -72,6 +81,17 @@ export default function ElderDetail() {
         variant={active.length === 0 ? 'primary' : 'secondary'}
         label={active.length === 0 ? t('family.pair_phone') : t('elderPhone.pair_another')}
         onPress={() => router.push({ pathname: '/elder/[elderId]/pair', params: { elderId } })}
+      />
+
+      <Heading>{t('help.title')}</Heading>
+      <Body muted>{t('help.test_explain')}</Body>
+      <ErrorNote error={testAlert.error} />
+      <Button
+        variant="secondary"
+        icon="bell"
+        label={t('help.test_send')}
+        busy={testAlert.isPending}
+        onPress={() => testAlert.mutate()}
       />
     </Screen>
   );

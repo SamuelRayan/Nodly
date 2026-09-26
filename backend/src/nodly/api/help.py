@@ -56,6 +56,9 @@ class HelpOut(BaseModel):
     created_at: datetime
     acked_at: datetime | None
     acked_by_name: str | None
+    acked_by_phone_e164: str | None = Field(
+        description='So the elder\'s screen can offer "Call Priya" (if they gave a number)'
+    )
     closed_at: datetime | None
     closed_by_name: str | None
     resolution_note: str | None
@@ -105,6 +108,11 @@ async def help_out(session: AsyncSession, request: HelpRequest) -> HelpOut:
             names[user_id] = await session.scalar(
                 select(User.display_name).where(User.id == user_id)
             )
+    acked_phone = (
+        await session.scalar(select(User.phone_e164).where(User.id == request.acked_by_user_id))
+        if request.acked_by_user_id
+        else None
+    )
     last_checkin = await session.scalar(
         select(func.max(Checkin.checked_in_at)).where(Checkin.elder_id == elder.id)
     )
@@ -119,6 +127,7 @@ async def help_out(session: AsyncSession, request: HelpRequest) -> HelpOut:
         created_at=request.created_at,
         acked_at=request.acked_at,
         acked_by_name=names.get(request.acked_by_user_id) if request.acked_by_user_id else None,
+        acked_by_phone_e164=acked_phone,
         closed_at=request.closed_at,
         closed_by_name=names.get(request.closed_by_user_id) if request.closed_by_user_id else None,
         resolution_note=request.resolution_note,

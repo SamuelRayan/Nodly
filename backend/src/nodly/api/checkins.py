@@ -66,7 +66,8 @@ class CheckinStatusOut(BaseModel):
         description="okay: checked in (or marked okay). waiting: not due yet. late: past due, "
         "family told. active: past due but used Nodly today (activity counts as okay). "
         "missed: missed check-in alert is open. paused: check-ins paused. no_phone: no "
-        "connected phone, so no reminders or alerts."
+        "connected phone, so no reminders or alerts. starts_tomorrow: the phone was connected "
+        "after today's due time, so check-ins begin tomorrow."
     )
     schedule: ScheduleOut
     checkin: CheckinOut | None

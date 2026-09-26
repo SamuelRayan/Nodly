@@ -20,12 +20,15 @@ interface AppState {
   mode: Mode | null;
   deviceToken: string | null;
   notice: Notice | null;
+  /** Paired a moment ago: the elder home first says who they're connected with (E2). */
+  justPaired: boolean;
   hydrate: () => Promise<void>;
   chooseMode: (mode: Mode | null) => Promise<void>;
   setDeviceToken: (token: string) => Promise<void>;
   /** Forget the elder pairing (or the mode choice) and go back to the welcome screen. */
   resetToWelcome: (notice?: Notice) => Promise<void>;
   clearNotice: () => void;
+  clearJustPaired: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -33,6 +36,7 @@ export const useAppStore = create<AppState>((set) => ({
   mode: null,
   deviceToken: null,
   notice: null,
+  justPaired: false,
 
   hydrate: async () => {
     const [mode, deviceToken] = await Promise.all([
@@ -58,13 +62,14 @@ export const useAppStore = create<AppState>((set) => ({
   setDeviceToken: async (token) => {
     await secure.set(DEVICE_TOKEN_KEY, token);
     await secure.set(MODE_KEY, 'elder');
-    set({ deviceToken: token, mode: 'elder' });
+    set({ deviceToken: token, mode: 'elder', justPaired: true });
   },
 
   resetToWelcome: async (notice) => {
     await Promise.all([secure.remove(DEVICE_TOKEN_KEY), secure.remove(MODE_KEY)]);
-    set({ mode: null, deviceToken: null, notice: notice ?? null });
+    set({ mode: null, deviceToken: null, notice: notice ?? null, justPaired: false });
   },
 
   clearNotice: () => set({ notice: null }),
+  clearJustPaired: () => set({ justPaired: false }),
 }));

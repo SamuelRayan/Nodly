@@ -43,7 +43,9 @@ FAMILY_WARNINGS = (EngineActionKind.family_late, EngineActionKind.missed)
 REMINDERS = (EngineActionKind.remind, EngineActionKind.due_remind)
 WEEK = 7
 
-CheckinStatus = Literal["waiting", "late", "active", "missed", "okay", "paused", "no_phone"]
+CheckinStatus = Literal[
+    "waiting", "late", "active", "missed", "okay", "paused", "no_phone", "starts_tomorrow"
+]
 DayMark = Literal["okay", "missed", "none"]
 
 
@@ -256,6 +258,8 @@ class ElderDay:
     day: date
     schedule: Schedule
     status: CheckinStatus
+    # The engine watches today: a phone was connected before today's due time.
+    watched: bool
     checkin: Checkin | None
     alert: CheckinAlert | None
     reminded: list[tuple[EngineActionKind, datetime]]
@@ -300,6 +304,8 @@ async def elder_day(session: AsyncSession, elder: Elder, now: datetime) -> Elder
     phone = (await phone_states(session, [elder.id])).get(elder.id)
     active = _active_on(today, tz, phone)
     checkin = checkins.get(today)
+    # Same rule as the tick: a phone connected after today's due time starts tomorrow.
+    watched = phone is not None and phone.connected_since <= schedule.due
 
     status: CheckinStatus
     if checkin is not None:
@@ -308,6 +314,8 @@ async def elder_day(session: AsyncSession, elder: Elder, now: datetime) -> Elder
         status = "no_phone"
     elif elder.is_paused(now):
         status = "paused"
+    elif not watched:
+        status = "starts_tomorrow"
     elif alert is not None and alert.resolved_at is None:
         status = "missed"
     elif now >= schedule.due:
@@ -328,6 +336,7 @@ async def elder_day(session: AsyncSession, elder: Elder, now: datetime) -> Elder
         day=today,
         schedule=schedule,
         status=status,
+        watched=watched,
         checkin=checkin,
         alert=alert,
         reminded=reminded,

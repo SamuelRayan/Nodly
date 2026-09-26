@@ -4076,10 +4076,11 @@
               "missed",
               "okay",
               "paused",
-              "no_phone"
+              "no_phone",
+              "starts_tomorrow"
             ],
             "title": "Status",
-            "description": "okay: checked in (or marked okay). waiting: not due yet. late: past due, family told. active: past due but used Nodly today (activity counts as okay). missed: missed check-in alert is open. paused: check-ins paused. no_phone: no connected phone, so no reminders or alerts."
+            "description": "okay: checked in (or marked okay). waiting: not due yet. late: past due, family told. active: past due but used Nodly today (activity counts as okay). missed: missed check-in alert is open. paused: check-ins paused. no_phone: no connected phone, so no reminders or alerts. starts_tomorrow: the phone was connected after today's due time, so check-ins begin tomorrow."
           },
           "schedule": {
             "$ref": "#/components/schemas/ScheduleOut"
@@ -4562,6 +4563,11 @@
           "schedule": {
             "$ref": "#/components/schemas/ScheduleOut"
           },
+          "watched_today": {
+            "type": "boolean",
+            "title": "Watched Today",
+            "description": "Check-ins count today (false on the day a phone is set up after the due time: they start tomorrow)"
+          },
           "family_alerted_at": {
             "anyOf": [
               {
@@ -4590,6 +4596,7 @@
           "checked_in_at",
           "marked_okay_by_family",
           "schedule",
+          "watched_today",
           "family_alerted_at",
           "family_names"
         ],
@@ -5237,6 +5244,18 @@
             ],
             "title": "Acked By Name"
           },
+          "acked_by_phone_e164": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acked By Phone E164",
+            "description": "So the elder's screen can offer \"Call Priya\" (if they gave a number)"
+          },
           "closed_at": {
             "anyOf": [
               {
@@ -5365,6 +5384,7 @@
           "created_at",
           "acked_at",
           "acked_by_name",
+          "acked_by_phone_e164",
           "closed_at",
           "closed_by_name",
           "resolution_note",

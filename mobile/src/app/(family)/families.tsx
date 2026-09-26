@@ -4,10 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { useFamilies } from '@/api/hooks';
 import { useMe, useSession } from '@/auth/session';
 import { Body, Button, ErrorNote, Loading, Row, Screen, Title } from '@/components/ui';
-import { APP_NAME } from '@/config';
 
-/** Family dashboard (stub): your families, create or join one. */
-export default function FamilyHome() {
+/** Your families (create, join, open one) and signing out. */
+export default function Families() {
   const { t } = useTranslation();
   const { signOut } = useSession();
   const me = useMe().data;
@@ -15,7 +14,7 @@ export default function FamilyHome() {
 
   return (
     <Screen>
-      <Stack.Screen options={{ title: APP_NAME }} />
+      <Stack.Screen options={{ title: t('family.account') }} />
       <Title>{t('family.home_title')}</Title>
       {me?.display_name ? <Body muted>{me.email}</Body> : null}
       {families.isPending ? <Loading /> : null}

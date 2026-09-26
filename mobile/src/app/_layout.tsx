@@ -9,6 +9,7 @@ import { queryClient } from '@/api/query';
 import { SessionProvider, useMe, useSession } from '@/auth/session';
 import { Loading } from '@/components/ui';
 import { registerForPush } from '@/push/notifications';
+import { useNotificationRouting } from '@/push/useNotificationRouting';
 import { useAppStore } from '@/state/app';
 import { ThemeProvider } from '@/theme';
 
@@ -63,6 +64,9 @@ function RootNavigator() {
       SplashScreen.hide();
     }
   }, [splashHidden]);
+
+  // Taps on notifications and their buttons ("I'm okay", "I'm on it").
+  useNotificationRouting(status === 'elder' ? 'elder' : status === 'family' ? 'family' : 'other');
 
   // Register this phone for push once it knows who it belongs to.
   useEffect(() => {

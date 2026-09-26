@@ -172,6 +172,10 @@ class DeviceToday(BaseModel):
         description="A family member marked them okay (and they haven't tapped yet)"
     )
     schedule: ScheduleOut
+    watched_today: bool = Field(
+        description="Check-ins count today (false on the day a phone is set up after the due "
+        "time: they start tomorrow)"
+    )
     family_alerted_at: datetime | None = Field(
         description="When the family got today's missed check-in alert, if they did"
     )
@@ -195,6 +199,7 @@ async def _device_today(session: AsyncSession, access: DeviceAccess) -> DeviceTo
         checked_in_at=checkin.checked_in_at if checkin and checkin.source != "family" else None,
         marked_okay_by_family=bool(checkin and checkin.source == "family"),
         schedule=schedule_out(day.schedule),
+        watched_today=day.watched,
         family_alerted_at=day.alert.raised_at if day.alert else None,
         family_names=[name.split()[0] for (name,) in members if name and name.strip()],
     )

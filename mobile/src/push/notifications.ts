@@ -36,7 +36,7 @@ export async function ensureChannels(): Promise<void> {
       importance: AndroidImportance.DEFAULT,
     }),
     // Real emergencies only: loudest, visible on the lock screen, allowed through Do Not
-    // Disturb when the user grants that. The alarm-style sound comes with Phase 5.
+    // Disturb when the user grants that. A custom alarm sound needs a new build (Phase 15).
     Notifications.setNotificationChannelAsync('help_alerts', {
       name: i18n.t('channels.help_alerts'),
       description: i18n.t('channels.help_alerts_description'),
@@ -53,6 +53,30 @@ export async function ensureChannels(): Promise<void> {
   ]);
 }
 
+/**
+ * Action buttons, matched by the backend's categoryId. Buttons open the app, which then acts
+ * (a check-in, an "I'm on it"): simpler and more reliable than headless background handling.
+ * Identifiers must not contain ":" or "-" (Expo docs).
+ */
+export async function ensureCategories(): Promise<void> {
+  await Promise.all([
+    Notifications.setNotificationCategoryAsync('checkin_reminder', [
+      {
+        identifier: 'im_okay',
+        buttonTitle: i18n.t('elder.okay'),
+        options: { opensAppToForeground: true },
+      },
+    ]),
+    Notifications.setNotificationCategoryAsync('help_alert', [
+      {
+        identifier: 'on_it',
+        buttonTitle: i18n.t('help.on_it'),
+        options: { opensAppToForeground: true },
+      },
+    ]),
+  ]);
+}
+
 let registeredToken: string | null = null;
 
 /**
@@ -63,6 +87,7 @@ let registeredToken: string | null = null;
 export async function registerForPush(target: 'user' | 'device'): Promise<void> {
   try {
     await ensureChannels();
+    await ensureCategories();
     if (!config.easProjectId) {
       console.info('push: no EAS project id yet (see docs/SETUP.md); skipping registration');
       return;

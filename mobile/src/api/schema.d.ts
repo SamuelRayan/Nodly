@@ -412,6 +412,169 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/elders/{elder_id}/checkins/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Checkin Status
+         * @description Today in the elder's timezone: checked in or not, reminders, alerts, and the week.
+         */
+        get: operations["checkin_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/elders/{elder_id}/checkins/mark-okay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Okay
+         * @description "I've talked to them": counts as today's check-in, closes a missed check-in alert and
+         *     tells the rest of the family. If they already checked in, nothing changes.
+         */
+        post: operations["mark_okay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/elders/{elder_id}/checkins/alert/ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ack Alert
+         * @description "I'm on it" for today's missed check-in alert. The first member to say so is kept.
+         */
+        post: operations["ack_alert"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/families/{family_id}/help": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Live Help
+         * @description Help requests nobody has closed yet, newest first (tests included, and labelled).
+         */
+        get: operations["live_help"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/help/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Help
+         * @description One request with its whole timeline.
+         */
+        get: operations["get_help"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/help/{request_id}/ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ack Help
+         * @description "I'm on it". The first one stops the repeats, tells the rest of the family and shows
+         *     on the elder's screen.
+         */
+        post: operations["ack_help"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/help/{request_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve Help
+         * @description Close a request, with an optional note for the timeline.
+         */
+        post: operations["resolve_help"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/elders/{elder_id}/help/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Help
+         * @description A clearly labelled test alert to every family phone, to check they all ring (§8).
+         *     Limited to a few a day per family; real Help never is.
+         */
+        post: operations["test_help"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/elders/{elder_id}/pairing-codes": {
         parameters: {
             query?: never;
@@ -576,6 +739,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/device/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Device Today
+         * @description The elder's home screen: checked in today or not, when the family would hear, and
+         *     who's in the family.
+         */
+        get: operations["device_today"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/device/checkin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Device Checkin
+         * @description "I'm okay". Once a day counts; tapping again changes nothing. Closes a missed
+         *     check-in alert and tells the family "All good" if they'd been told to worry.
+         */
+        post: operations["device_checkin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/device/help": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Device Current Help
+         * @description The open request, if any, for the elder's "Your family has been alerted" screen:
+         *     who got it and who's on it.
+         */
+        get: operations["device_current_help"];
+        put?: never;
+        /**
+         * Device Help
+         * @description Ask the family for help. Pressing again while a request is open returns that one.
+         */
+        post: operations["device_help"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/device/help/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Device Cancel Help
+         * @description "I'm okay now": closes the open request and tells the family.
+         */
+        post: operations["device_cancel_help"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/meta/timezones": {
         parameters: {
             query?: never;
@@ -640,6 +890,43 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AlertOut */
+        AlertOut: {
+            /**
+             * Raised At
+             * Format: date-time
+             */
+            raised_at: string;
+            /** Acked At */
+            acked_at: string | null;
+            /**
+             * Acked By Name
+             * @description Who said "I'm on it"
+             */
+            acked_by_name: string | null;
+            /** Resolved At */
+            resolved_at: string | null;
+        };
+        /** CheckinOut */
+        CheckinOut: {
+            /**
+             * Local Date
+             * Format: date
+             * @description The elder's local day
+             */
+            local_date: string;
+            /**
+             * Checked In At
+             * Format: date-time
+             */
+            checked_in_at: string;
+            source: components["schemas"]["CheckinSource"];
+            /**
+             * Marked By Name
+             * @description Who marked them okay (source = family)
+             */
+            marked_by_name: string | null;
+        };
         /** CheckinSettings */
         CheckinSettings: {
             /**
@@ -684,6 +971,55 @@ export interface components {
             grace_minutes?: number | null;
             /** Activity Counts As Ok */
             activity_counts_as_ok?: boolean | null;
+        };
+        /**
+         * CheckinSource
+         * @enum {string}
+         */
+        CheckinSource: "app" | "notification" | "family";
+        /** CheckinStatusOut */
+        CheckinStatusOut: {
+            /**
+             * Elder Id
+             * Format: uuid
+             */
+            elder_id: string;
+            /** Timezone */
+            timezone: string;
+            /**
+             * Local Date
+             * Format: date
+             * @description Today, in the elder's timezone
+             */
+            local_date: string;
+            /**
+             * Status
+             * @description okay: checked in (or marked okay). waiting: not due yet. late: past due, family told. active: past due but used Nodly today (activity counts as okay). missed: missed check-in alert is open. paused: check-ins paused. no_phone: no connected phone, so no reminders or alerts. starts_tomorrow: the phone was connected after today's due time, so check-ins begin tomorrow.
+             * @enum {string}
+             */
+            status: "waiting" | "late" | "active" | "missed" | "okay" | "paused" | "no_phone" | "starts_tomorrow";
+            schedule: components["schemas"]["ScheduleOut"];
+            checkin: components["schemas"]["CheckinOut"] | null;
+            alert: components["schemas"]["AlertOut"] | null;
+            /**
+             * Reminders
+             * @description Reminders sent to the elder today
+             */
+            reminders: components["schemas"]["ReminderOut"][];
+            /** Active Today */
+            active_today: boolean;
+            /**
+             * Last Seen At
+             * @description The elder's phone last used Nodly
+             */
+            last_seen_at: string | null;
+            /** @description The latest check-in before today */
+            last_checkin: components["schemas"]["CheckinOut"] | null;
+            /**
+             * Week
+             * @description The last 7 days, oldest first, today last
+             */
+            week: components["schemas"]["DayOut"][];
         };
         /** ClaimIn */
         ClaimIn: {
@@ -739,6 +1075,50 @@ export interface components {
             /** Flag */
             flag: string;
         };
+        /** DayOut */
+        DayOut: {
+            /**
+             * Local Date
+             * Format: date
+             */
+            local_date: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "okay" | "missed" | "none";
+        };
+        /** DeviceCheckinIn */
+        DeviceCheckinIn: {
+            /**
+             * Source
+             * @description The home screen button, or the button on a reminder
+             * @default app
+             * @enum {string}
+             */
+            source: "app" | "notification";
+        };
+        /** DeviceHelpIn */
+        DeviceHelpIn: {
+            /**
+             * @description help: urgent. call_me: "Please call me", not urgent
+             * @default help
+             */
+            kind: components["schemas"]["HelpKind"];
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Location Accuracy M */
+            location_accuracy_m?: number | null;
+            /** Battery Percent */
+            battery_percent?: number | null;
+            /**
+             * Network
+             * @description wifi, cellular, ...
+             */
+            network?: string | null;
+        };
         /** DeviceMe */
         DeviceMe: {
             device: components["schemas"]["DeviceOut"];
@@ -783,6 +1163,41 @@ export interface components {
          * @enum {string}
          */
         DevicePlatform: "android" | "ios";
+        /** DeviceToday */
+        DeviceToday: {
+            /**
+             * Local Date
+             * Format: date
+             * @description Today, in the elder's timezone
+             */
+            local_date: string;
+            /**
+             * Checked In At
+             * @description When they said "I'm okay" today
+             */
+            checked_in_at: string | null;
+            /**
+             * Marked Okay By Family
+             * @description A family member marked them okay (and they haven't tapped yet)
+             */
+            marked_okay_by_family: boolean;
+            schedule: components["schemas"]["ScheduleOut"];
+            /**
+             * Watched Today
+             * @description Check-ins count today (false on the day a phone is set up after the due time: they start tomorrow)
+             */
+            watched_today: boolean;
+            /**
+             * Family Alerted At
+             * @description When the family got today's missed check-in alert, if they did
+             */
+            family_alerted_at: string | null;
+            /**
+             * Family Names
+             * @description First names of the family members, organizer first ("Priya and Arjun")
+             */
+            family_names: string[];
+        };
         /** ElderCreate */
         ElderCreate: {
             /**
@@ -965,6 +1380,110 @@ export interface components {
              */
             status: "ok";
         };
+        /**
+         * HelpEventKind
+         * @enum {string}
+         */
+        HelpEventKind: "created" | "pushed" | "acknowledged" | "resolved" | "cancelled" | "sms_skipped" | "voice_skipped";
+        /** HelpEventOut */
+        HelpEventOut: {
+            kind: components["schemas"]["HelpEventKind"];
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Name
+             * @description The family member involved, if any
+             */
+            name: string | null;
+        };
+        /**
+         * HelpKind
+         * @enum {string}
+         */
+        HelpKind: "help" | "call_me";
+        /** HelpOut */
+        HelpOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Elder Id
+             * Format: uuid
+             */
+            elder_id: string;
+            /**
+             * Elder Name
+             * @description How the family refers to the elder
+             */
+            elder_name: string;
+            /** Elder Phone E164 */
+            elder_phone_e164: string | null;
+            kind: components["schemas"]["HelpKind"];
+            status: components["schemas"]["HelpStatus"];
+            /** Is Test */
+            is_test: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Acked At */
+            acked_at: string | null;
+            /** Acked By Name */
+            acked_by_name: string | null;
+            /**
+             * Acked By Phone E164
+             * @description So the elder's screen can offer "Call Priya" (if they gave a number)
+             */
+            acked_by_phone_e164: string | null;
+            /** Closed At */
+            closed_at: string | null;
+            /** Closed By Name */
+            closed_by_name: string | null;
+            /** Resolution Note */
+            resolution_note: string | null;
+            /** Latitude */
+            latitude: number | null;
+            /** Longitude */
+            longitude: number | null;
+            /** Location Accuracy M */
+            location_accuracy_m: number | null;
+            /** Battery Percent */
+            battery_percent: number | null;
+            /** Network */
+            network: string | null;
+            /** Last Checkin At */
+            last_checkin_at: string | null;
+            /** Recipients */
+            recipients: components["schemas"]["HelpRecipient"][];
+            /** Timeline */
+            timeline: components["schemas"]["HelpEventOut"][];
+        };
+        /** HelpRecipient */
+        HelpRecipient: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string | null;
+            /**
+             * Delivered
+             * @description Their phone accepted at least one alert
+             */
+            delivered: boolean;
+        };
+        /**
+         * HelpStatus
+         * @enum {string}
+         */
+        HelpStatus: "open" | "acknowledged" | "resolved" | "cancelled";
         /** InviteCreated */
         InviteCreated: {
             /**
@@ -1236,6 +1755,24 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** ReminderOut */
+        ReminderOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "remind" | "due_remind";
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** ResolveIn */
+        ResolveIn: {
+            /** Note */
+            note?: string | null;
+        };
         /** RotatedToken */
         RotatedToken: {
             /**
@@ -1249,6 +1786,27 @@ export interface components {
              * @description The token you called with keeps working until then, in case this response is lost
              */
             previous_token_valid_until: string;
+        };
+        /** ScheduleOut */
+        ScheduleOut: {
+            /**
+             * Remind At
+             * Format: date-time
+             * @description Reminder to the elder (UTC)
+             */
+            remind_at: string;
+            /**
+             * Due At
+             * Format: date-time
+             * @description Check in by (UTC); the family hears after this
+             */
+            due_at: string;
+            /**
+             * Alert At
+             * Format: date-time
+             * @description Missed check-in alert to the family (UTC)
+             */
+            alert_at: string;
         };
         /**
          * SuggestionReason
@@ -2986,6 +3544,564 @@ export interface operations {
             };
         };
     };
+    checkin_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                elder_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinStatusOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    mark_okay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                elder_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinStatusOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ack_alert: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                elder_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinStatusOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflicts with the current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    live_help: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpOut"][];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_help: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ack_help: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    resolve_help: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, `invalid_code`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    test_help: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                elder_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many failed attempts; see the Retry-After header */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     create_pairing_code: {
         parameters: {
             query?: never;
@@ -3384,6 +4500,186 @@ export interface operations {
             };
             /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    device_today: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceToday"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    device_checkin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceCheckinIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceToday"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, `invalid_code`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    device_current_help: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpOut"] | null;
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    device_help: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceHelpIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, `invalid_code`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    device_cancel_help: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflicts with the current state */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
