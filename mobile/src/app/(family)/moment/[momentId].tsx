@@ -7,6 +7,7 @@ import { Image, View } from 'react-native';
 import { api, unwrap } from '@/api/client';
 import { keys, useMomentActions } from '@/api/hooks';
 import { Avatar, Button, ErrorNote, Loading, Pill, Screen, T } from '@/components/ui';
+import { VoicePlayer } from '@/components/voice';
 import { dateTime } from '@/lib/format';
 import { mediaUrl } from '@/moments/prepare';
 import { useTheme } from '@/theme';
@@ -46,9 +47,21 @@ export default function MomentViewer() {
   return (
     <Screen>
       <Stack.Screen options={{ title: t('moments.from', { name: data.author_name ?? '' }) }} />
-      <View style={{ flex: 1, minHeight: 360, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.neutralTint }}>
-        <Image source={{ uri: mediaUrl(data.url) }} style={{ flex: 1 }} resizeMode="contain" />
-      </View>
+      {data.kind === 'voice' && data.url ? (
+        <View style={{ flex: 1, minHeight: 360, justifyContent: 'center' }}>
+          <VoicePlayer
+            key={data.id}
+            url={mediaUrl(data.url)}
+            durationMs={data.duration_ms}
+            label={t('moments.play_from', { name: data.author_name ?? '' })}
+            big
+          />
+        </View>
+      ) : (
+        <View style={{ flex: 1, minHeight: 360, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.neutralTint }}>
+          <Image source={{ uri: mediaUrl(data.url) }} style={{ flex: 1 }} resizeMode="contain" />
+        </View>
+      )}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <Avatar name={data.author_name ?? '?'} />
         <View style={{ flex: 1 }}>

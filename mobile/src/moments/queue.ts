@@ -9,7 +9,7 @@ import { queryClient } from '@/api/query';
 import { config } from '@/config';
 
 /**
- * The moment upload queue (CLAUDE.md §9): a shared photo is copied into the app's own storage
+ * The moment upload queue (CLAUDE.md §9): a shared photo or voice note is copied into the app's own storage
  * and listed in a small JSON file, so it survives the app being closed and the phone going
  * offline. Each item walks: queued → uploading → checking → posted | rejected, retrying with
  * backoff whenever something fails. The server decides everything about it (including whether
@@ -23,8 +23,10 @@ export interface QueueItem {
   /** null when an elder's phone shares it */
   familyId: string | null;
   fileUri: string;
-  contentType: 'image/jpeg';
-  kind: 'photo';
+  contentType: 'image/jpeg' | 'audio/mp4';
+  kind: 'photo' | 'voice';
+  /** A voice note's length as recorded (the server measures it again). */
+  durationMs?: number;
   momentId?: string;
   uploadPath?: string;
   uploaded?: boolean;
@@ -93,19 +95,32 @@ function load(): void {
 
 /** Add a prepared photo (a local file) to the queue and start sending it. */
 export function enqueuePhoto(sourceUri: string, familyId: string | null): QueueItem {
+  return enqueue(sourceUri, familyId, { kind: 'photo', contentType: 'image/jpeg' }, 'jpg');
+}
+
+/** Add a recorded voice note (an .m4a file) to the queue and start sending it. */
+export function enqueueVoice(sourceUri: string, familyId: string | null, durationMs: number): QueueItem {
+  return enqueue(sourceUri, familyId, { kind: 'voice', contentType: 'audio/mp4', durationMs }, 'm4a');
+}
+
+function enqueue(
+  sourceUri: string,
+  familyId: string | null,
+  what: Pick<QueueItem, 'kind' | 'contentType' | 'durationMs'>,
+  extension: string,
+): QueueItem {
   load();
   if (!DIRECTORY.exists) {
     DIRECTORY.create({ intermediates: true });
   }
   const localId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const copy = new File(DIRECTORY, `${localId}.jpg`);
+  const copy = new File(DIRECTORY, `${localId}.${extension}`);
   new File(sourceUri).copy(copy);
   const item: QueueItem = {
     localId,
     familyId,
     fileUri: copy.uri,
-    contentType: 'image/jpeg',
-    kind: 'photo',
+    ...what,
     state: 'queued',
     attempts: 0,
     nextTryAt: 0,

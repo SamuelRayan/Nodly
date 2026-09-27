@@ -81,3 +81,9 @@ export function timeAgo(iso: string): string {
   const hours = Math.round(minutes / 60);
   return i18n.t(hours === 1 ? 'time.hour_ago' : 'time.hours_ago', { n: hours });
 }
+
+/** A recording's length: "0:07", "1:42". */
+export function duration(ms: number): string {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}

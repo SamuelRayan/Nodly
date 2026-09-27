@@ -84,10 +84,33 @@ Also added: `scripts/demo_state.py` (dev only). It moves check-in times to now +
   - Airplane mode can't be tested on emulators: `adb reverse` doesn't use the network.
   - Voice notes and video are next (S3).
 
+### Day 2 (2026-09-27): S3, voice notes ✅
+- **Backend:**
+  - moments accept `kind: voice` (MP4/AAC `.m4a`, D76)
+  - the worker measures each file with ffprobe: not playable → `not_audio`, over 5 minutes → `too_long`, under 10 s → posted but `too_short`
+  - the upload limit depends on the kind; `.m4a` is served as `audio/mp4`; the push says "Samuel sent a voice note"
+  - tests use real 12 s and 5 s files made with ffmpeg, plus random bytes, a cut-off file and a video; the pure boundary is 9,900 / 9,999 / 10,000 ms
+  - 408 backend tests pass
+  - `.env.example` now lists the moments settings (it was missing them since S2)
+- **App:**
+  - Share has Photo | Voice; tap to start, tap to stop (no hold)
+  - while recording: timer, live waveform, "from 10 seconds it counts for today"; it stops by itself just under 5 minutes
+  - a preview player and "Record again" before sending; the same queue and states as photos
+  - voice tiles (length, ✓ when it counts) in the family grid; the sand voice card with a big play/pause (design E5) in the family and elder viewers
+- **Verified on two emulators** (the emulators have no microphone input, so recordings are silent; lengths and playback are real):
+  - a 12.5 s note posted with "Counts for today" (`duration_ms` 12523) and the dashboard said "Shared at 12:45 PM · counts for today"
+  - a 5 s note posted with "Posted. Voice notes count for today from 10 seconds." (`too_short`)
+  - the elder phone showed "Moments, 1 new", played the 12 s note from its signed link (pause icon, the waveform filling, 0:04 of 0:12, "From Samuel"), and Send love worked
+- **Fixed along the way:**
+  - The family moments grid crashed with "Maximum update depth exceeded". Its zustand selector built a new array on every call, which zustand v5 treats as a change every time. This bug dated from S2; the grid wasn't opened then.
+  - The "Counts for today" pill on Share is centred.
+- **Not done:** video moments. They're first in the cut order, and S4 (billing) matters more for Next Gen.
+
 ### Found today
 - **Hermes on Android has no `Intl.RelativeTimeFormat` (nor `PluralRules`).** "12 minutes ago" is now built from plain strings.
 - **An emulator restored from a quick-boot snapshot lost its display:** every app went black and ours reported an ANR ("no focused window"). A cold boot (`-no-snapshot-load`) fixed it. Use cold boots for now.
 - **Claude Code stops background tasks when memory runs critically low.** It stopped Metro, the API, the worker and the elder emulator mid-test (Edge was open, about 1.7 GB). Close the browser before emulator sessions.
+- **`uiautomator dump` waits until the screen is idle.** While a voice note plays, the UI updates every 250 ms, so the dump only returns after playback ends and shows the finished state. Use screenshots to check anything that moves.
 - **The Phase 2 demo elder** (a fake paired phone) is part of the engine too. It got a real missed check-in alert on the family emulator. Only the dev database and your own device are involved.
 
 ## Phase 3 — Mobile foundation ✅ (2026-09-26)

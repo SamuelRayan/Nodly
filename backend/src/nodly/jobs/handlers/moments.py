@@ -61,7 +61,7 @@ async def verify_moment(ctx: JobContext, payload: dict[str, Any]) -> None:
         push = Push(
             tokens=tokens,
             title=f"{author} sent {KIND_WORDS.get(moment.kind, 'a moment')}",
-            body="Open Nodly to see it.",
+            body="Open Nodly to hear it." if moment.kind == "voice" else "Open Nodly to see it.",
             channel_id="moments",
             data={"type": "moment", "moment_id": str(moment.id)},
             priority="normal",

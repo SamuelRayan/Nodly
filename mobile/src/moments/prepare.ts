@@ -19,6 +19,8 @@ export async function preparePhoto(uri: string, width: number, height: number): 
 }
 
 /** The API returns signed links as paths; the app knows which server it talks to. */
+export function mediaUrl(path: string): string;
+export function mediaUrl(path: string | null | undefined): string | undefined;
 export function mediaUrl(path: string | null | undefined): string | undefined {
   return path ? `${config.apiUrl}${path}` : undefined;
 }

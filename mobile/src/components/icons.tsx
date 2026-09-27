@@ -114,6 +114,15 @@ const ICONS = {
       <Path d="M9 12l2 2 4-4" />
     </>
   ),
+  // Solid media controls (the design fills these, e.g. the voice note's play button).
+  play: <Path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none" />,
+  pause: (
+    <>
+      <Rect x={6.5} y={5} width={4} height={14} rx={1.2} fill="currentColor" stroke="none" />
+      <Rect x={13.5} y={5} width={4} height={14} rx={1.2} fill="currentColor" stroke="none" />
+    </>
+  ),
+  stop: <Rect x={6} y={6} width={12} height={12} rx={2.5} fill="currentColor" stroke="none" />,
 } as const;
 
 export type IconName = keyof typeof ICONS;
@@ -138,6 +147,7 @@ export function Icon({
       viewBox="0 0 24 24"
       fill="none"
       stroke={color ?? colors.text}
+      color={color ?? colors.text}
       strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"

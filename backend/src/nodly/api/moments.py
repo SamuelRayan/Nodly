@@ -9,7 +9,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query, Request, Response, status
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import and_, exists, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,11 +33,17 @@ from nodly.models import (
     MomentView,
     User,
 )
-from nodly.moments.service import complete, create_intent, store_upload
+from nodly.moments.service import CONTENT_TYPES, complete, create_intent, max_bytes, store_upload
 
 router = APIRouter(tags=["moments"])
 
-PHOTO_CONTENT_TYPES = ("image/jpeg", "image/png", "image/webp")
+# The media store's files, by extension (served with the right type for players).
+MEDIA_TYPES = {
+    ".jpg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".m4a": "audio/mp4",
+}
 
 
 @dataclass(frozen=True)
@@ -50,8 +56,16 @@ class Viewer:
 
 
 class MomentIn(BaseModel):
-    kind: Literal["photo"] = Field(description="Photos for now; voice notes and videos next")
-    content_type: Literal["image/jpeg", "image/png", "image/webp"]
+    kind: Literal["photo", "voice"] = Field(description="Videos come later")
+    content_type: Literal[
+        "image/jpeg", "image/png", "image/webp", "audio/mp4", "audio/m4a", "audio/x-m4a"
+    ] = Field(description="An image type for a photo; MP4 audio (.m4a) for a voice note")
+
+    @model_validator(mode="after")
+    def _type_fits_kind(self) -> "MomentIn":
+        if self.content_type not in CONTENT_TYPES[MomentKind(self.kind)]:
+            raise ValueError(f"A {self.kind} can't be {self.content_type}.")
+        return self
 
 
 class MomentOut(BaseModel):
@@ -73,12 +87,12 @@ class MomentOut(BaseModel):
     hearted_by_me: bool
     viewed_by_me: bool
     reject_reason: str | None = Field(
-        description="upload_missing | not_a_photo | too_large (rejected only)"
+        description="Rejected only: upload_missing | not_a_photo | not_audio | too_large | too_long"
     )
     qualifies: bool = Field(description="Counts for the family's free day of Plus (§10)")
     qualifying_local_date: date | None = Field(description="That day, on the family clock")
     not_qualifying_reason: str | None = Field(
-        description="near_duplicate | late | posted_by_elder | no_family_clock"
+        description="near_duplicate | late | posted_by_elder | no_family_clock | too_short"
     )
 
 
@@ -290,11 +304,11 @@ async def _upload(
     _require_mine(moment, viewer)
     if moment.status != MomentStatus.awaiting_upload:
         raise UploadNotExpectedError("This moment already has its file.")
-    size = await store_upload(settings, moment, request.stream(), settings.moment_photo_max_bytes)
+    limit = max_bytes(moment, settings)
+    size = await store_upload(settings, moment, request.stream(), limit)
     if size < 0:
-        raise TooLargeError(
-            f"Photos can be up to {settings.moment_photo_max_bytes // (1024 * 1024)} MB."
-        )
+        what = "Voice notes" if moment.kind == MomentKind.voice else "Photos"
+        raise TooLargeError(f"{what} can be up to {limit // (1024 * 1024)} MB.")
     moment.size_bytes = size
     await session.commit()
     return await moment_out(session, settings, moment, viewer)
@@ -485,7 +499,7 @@ async def device_moments(
 async def device_start_moment(
     body: MomentIn, access: CurrentDevice, session: SessionDep, settings: SettingsDep
 ) -> MomentOut:
-    """An elder shares a photo too (the big camera button). Elder posts never earn Plus."""
+    """An elder shares a moment too (the big camera button). Elder posts never earn Plus."""
     moment = await create_intent(
         session,
         family_id=access.family.id,
@@ -565,4 +579,8 @@ async def media(key: str, settings: SettingsDep, exp: int = 0, sig: str = "") ->
         raise NotFoundError("Not found.") from error
     if not path.is_file():
         raise NotFoundError("Not found.")
-    return FileResponse(path, headers={"Cache-Control": "private, max-age=300"})
+    return FileResponse(
+        path,
+        media_type=MEDIA_TYPES.get(path.suffix),
+        headers={"Cache-Control": "private, max-age=300"},
+    )

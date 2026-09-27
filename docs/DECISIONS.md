@@ -226,4 +226,9 @@ Format: **what** we decided, then *why*.
     - tapping a reminder opens the home with its big "I'm okay"
     - buttons appear, and work, whenever the app shows the notification itself (app in the foreground)
   - **After Shipaton:** send through FCM directly with data messages presented natively, and test on a physical Samsung (One UI).
-  - Also: a force-stopped Android app receives no FCM messages until it's opened again (Android's "stopped" state). Swiping it away from recents is fine.
+  - Also: a force-stopped Android app receives no FCM messages until it's opened again (Android's "stopped" state). Swiping it away from recents is fine.- **D76. Voice notes are AAC in an MP4 (`.m4a`) file, and the worker measures them with ffprobe.**
+  - That's what expo-audio records on both Android and iOS, so the API accepts only `audio/mp4` (and its aliases `audio/m4a`, `audio/x-m4a`). The worker rejects anything that isn't an MP4 container with an audio stream, no video and a duration (`not_audio`). Another format would be stored under the wrong extension and might not play on the elder's phone.
+  - Limits (config): posted up to 5 minutes (`too_long` beyond), and it counts for the day from 10 s (§10; `too_short` below, still posted). A 20 MB upload cap.
+  - ffprobe runs in a worker thread through `subprocess`, so it works under any event loop (Windows included). `FFPROBE_PATH` sets the binary.
+  - The app records mono 64 kbps (about 2.4 MB for 5 minutes), tap to start and tap to stop (never hold-to-talk), and stops itself just under 5 minutes, so a finished recording is never over the limit. Its "counts for today" hints are guidance only; the server decides.
+  - Only photos are checked for near-duplicates (§10 names photos). Re-sending the same recording would still count; accepted for the sprint.

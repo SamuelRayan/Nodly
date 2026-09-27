@@ -4,6 +4,9 @@ intent (server timestamp) → upload → complete → the worker verifies → pu
 Every step is idempotent: a second "complete" doesn't queue a second check.
 """
 
+import asyncio
+import json
+import subprocess
 import uuid
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
@@ -23,6 +26,12 @@ from nodly.models import Moment, MomentKind, MomentStatus
 
 VERIFY_JOB = "moments.verify"
 PHOTO_TYPES = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
+# What the app may announce for each kind, and the file extension it's stored under.
+CONTENT_TYPES = {
+    MomentKind.photo: {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"},
+    # Voice notes are AAC in an MP4 (.m4a) file: what expo-audio records on Android and iOS.
+    MomentKind.voice: {"audio/mp4": "m4a", "audio/m4a": "m4a", "audio/x-m4a": "m4a"},
+}
 
 
 class RejectReason:
@@ -30,7 +39,9 @@ class RejectReason:
 
     upload_missing = "upload_missing"  # "complete" came, but the file never arrived
     not_a_photo = "not_a_photo"
+    not_audio = "not_audio"  # a voice note that isn't playable audio
     too_large = "too_large"
+    too_long = "too_long"  # a voice note over the 5-minute limit
 
 
 class NotQualifyingReason:
@@ -38,12 +49,11 @@ class NotQualifyingReason:
     late = "late"  # checked more than 24 h after it was started
     posted_by_elder = "posted_by_elder"  # §10: only non-elder family members earn the day
     no_family_clock = "no_family_clock"  # the family has no elder yet, so no "day"
+    too_short = "too_short"  # a voice note under 10 seconds
 
 
 def storage_key(moment: Moment, variant: str = "original") -> str:
-    extension = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}.get(
-        moment.content_type, "bin"
-    )
+    extension = CONTENT_TYPES.get(MomentKind(moment.kind), {}).get(moment.content_type, "bin")
     name = f"{variant}.{extension}" if variant == "original" else f"{variant}.jpg"
     return f"{moment.family_id}/{moment.id}/{name}"
 
@@ -147,6 +157,53 @@ def inspect_photo(path: Path, thumbnail: Path, thumbnail_px: int) -> PhotoFacts 
     )
 
 
+def probe_audio(ffprobe: str, path: Path) -> int | None:
+    """A voice note's length in milliseconds, measured with ffprobe. None if it isn't an MP4
+    audio file we can play: unreadable, another format, no audio, a video, or no duration.
+    Blocking; run it in a thread."""
+    try:
+        result = subprocess.run(
+            [
+                ffprobe,
+                "-v",
+                "error",
+                "-print_format",
+                "json",
+                "-show_format",
+                "-show_streams",
+                str(path),
+            ],
+            capture_output=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    try:
+        info = json.loads(result.stdout)
+        streams = info.get("streams", [])
+        container = info["format"]["format_name"]
+        seconds = float(info["format"]["duration"])
+    except (ValueError, KeyError, TypeError):
+        return None
+    has_audio = any(stream.get("codec_type") == "audio" for stream in streams)
+    has_video = any(
+        stream.get("codec_type") == "video"
+        and not stream.get("disposition", {}).get("attached_pic")  # cover art is fine
+        for stream in streams
+    )
+    if "mp4" not in container.split(",") or not has_audio or has_video or seconds <= 0:
+        return None
+    return round(seconds * 1000)
+
+
+def long_enough(duration_ms: int, settings: Settings) -> bool:
+    """A voice note counts for the day from 10 seconds (§10)."""
+    return duration_ms >= round(settings.moment_voice_min_seconds * 1000)
+
+
 async def is_near_duplicate(
     session: AsyncSession, moment: Moment, phash: str, settings: Settings
 ) -> bool:
@@ -180,17 +237,26 @@ async def verify(session: AsyncSession, moment: Moment, now: datetime, settings:
     if not path.is_file():
         return await _reject(session, moment, RejectReason.upload_missing)
     size = path.stat().st_size
-    if size > settings.moment_photo_max_bytes:
+    if size > max_bytes(moment, settings):
         return await _reject(session, moment, RejectReason.too_large)
     moment.size_bytes = size
 
-    thumbnail_key = storage_key(moment, "thumbnail")
-    facts = inspect_photo(path, path_for(settings, thumbnail_key), settings.moment_thumbnail_px)
-    if facts is None:
-        return await _reject(session, moment, RejectReason.not_a_photo)
-    moment.width, moment.height, moment.phash = facts.width, facts.height, facts.phash
-    moment.content_type = facts.content_type
-    moment.thumbnail_key = thumbnail_key
+    if moment.kind == MomentKind.voice:
+        duration_ms = await asyncio.to_thread(probe_audio, settings.ffprobe_path, path)
+        if duration_ms is None:
+            return await _reject(session, moment, RejectReason.not_audio)
+        if duration_ms > settings.moment_voice_max_seconds * 1000:
+            return await _reject(session, moment, RejectReason.too_long)
+        moment.duration_ms = duration_ms
+        moment.content_type = "audio/mp4"
+    else:
+        thumbnail_key = storage_key(moment, "thumbnail")
+        facts = inspect_photo(path, path_for(settings, thumbnail_key), settings.moment_thumbnail_px)
+        if facts is None:
+            return await _reject(session, moment, RejectReason.not_a_photo)
+        moment.width, moment.height, moment.phash = facts.width, facts.height, facts.phash
+        moment.content_type = facts.content_type
+        moment.thumbnail_key = thumbnail_key
 
     # Decide everything before assigning: the lookups below autoflush, and a half-set row
     # (qualifies without its day) is refused by a check constraint.
@@ -217,10 +283,21 @@ async def _why_not_qualifying(
         return NotQualifyingReason.late
     if await family_timezone(session, moment.family_id) is None:
         return NotQualifyingReason.no_family_clock
+    if moment.kind == MomentKind.voice:
+        assert moment.duration_ms is not None
+        if not long_enough(moment.duration_ms, settings):
+            return NotQualifyingReason.too_short
+        return None
     assert moment.phash is not None
     if await is_near_duplicate(session, moment, moment.phash, settings):
         return NotQualifyingReason.near_duplicate
     return None
+
+
+def max_bytes(moment: Moment, settings: Settings) -> int:
+    if moment.kind == MomentKind.voice:
+        return settings.moment_voice_max_bytes
+    return settings.moment_photo_max_bytes
 
 
 async def _reject(session: AsyncSession, moment: Moment, reason: str) -> None:

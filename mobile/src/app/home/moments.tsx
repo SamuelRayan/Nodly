@@ -6,6 +6,7 @@ import { Image, View } from 'react-native';
 
 import { useDeviceMe, useDeviceMoments, useMomentActions } from '@/api/hooks';
 import { Avatar, Button, ErrorNote, Loading, PillButton, Screen, T, Title } from '@/components/ui';
+import { VoicePlayer } from '@/components/voice';
 import { dateTime } from '@/lib/format';
 import { pickPhoto } from '@/moments/pick';
 import { mediaUrl, preparePhoto } from '@/moments/prepare';
@@ -100,9 +101,21 @@ export default function ElderMoments() {
           {t('moments.of', { index: index + 1, total: list.length })}
         </T>
       </View>
-      <View style={{ flex: 1, borderRadius: 28, overflow: 'hidden', backgroundColor: colors.neutralTint }}>
-        <Image source={{ uri: mediaUrl(current.url) }} style={{ flex: 1 }} resizeMode="cover" />
-      </View>
+      {current.kind === 'voice' && current.url ? (
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <VoicePlayer
+            key={current.id}
+            url={mediaUrl(current.url)}
+            durationMs={current.duration_ms}
+            label={t('moments.play_from', { name: current.author_name?.split(' ')[0] ?? '' })}
+            big
+          />
+        </View>
+      ) : (
+        <View style={{ flex: 1, borderRadius: 28, overflow: 'hidden', backgroundColor: colors.neutralTint }}>
+          <Image source={{ uri: mediaUrl(current.url) }} style={{ flex: 1 }} resizeMode="cover" />
+        </View>
+      )}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <Avatar name={current.author_name ?? '?'} size={56} />
         <View style={{ flex: 1 }}>

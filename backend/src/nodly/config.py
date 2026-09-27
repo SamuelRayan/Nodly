@@ -107,6 +107,11 @@ class Settings(BaseSettings):
     # §10: a moment counts for its day only if checked within this long of its intent.
     moment_qualify_within_hours: float = Field(default=24.0, gt=0)
     moment_thumbnail_px: int = Field(default=640, ge=64)
+    # Voice notes (§9, §10): posted up to MAX seconds; count for the day from MIN seconds.
+    moment_voice_max_bytes: int = Field(default=20 * 1024 * 1024, ge=1024)
+    moment_voice_min_seconds: float = Field(default=10.0, ge=0)
+    moment_voice_max_seconds: float = Field(default=300.0, gt=0)
+    ffprobe_path: str = "ffprobe"
     reactions_enabled: bool = True
 
     @property

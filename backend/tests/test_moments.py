@@ -1,6 +1,8 @@
 """Moments (CLAUDE.md §9) and whether they qualify for the free day of Plus (§10)."""
 
 import io
+import shutil
+import subprocess
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -19,7 +21,7 @@ from nodly.config import Settings
 from nodly.db import create_sessionmaker
 from nodly.media import signed_path
 from nodly.models import Job, Moment
-from nodly.moments.service import VERIFY_JOB, verify
+from nodly.moments.service import VERIFY_JOB, long_enough, verify
 from nodly.push import RecordingPushSender
 from nodly.worker import Worker
 from tests.conftest import app_client, make_settings
@@ -89,7 +91,14 @@ async def ok(response: httpx.Response, status: int = 200) -> Any:
 
 
 async def share(
-    api: httpx.AsyncClient, home: Home, person: SupabaseUser, data: bytes, at: datetime = INTENT
+    api: httpx.AsyncClient,
+    home: Home,
+    person: SupabaseUser,
+    data: bytes,
+    at: datetime = INTENT,
+    *,
+    kind: str = "photo",
+    content_type: str = "image/jpeg",
 ) -> dict[str, Any]:
     """Start → upload → complete, as a family member, at `at`."""
     with time_machine.travel(at, tick=False):
@@ -97,7 +106,7 @@ async def share(
             await api.post(
                 f"/v1/families/{home.family.id}/moments",
                 headers=person.headers,
-                json={"kind": "photo", "content_type": "image/jpeg"},
+                json={"kind": kind, "content_type": content_type},
             ),
             201,
         )
@@ -105,7 +114,7 @@ async def share(
         await ok(
             await api.put(
                 started["upload_path"],
-                headers={**person.headers, "Content-Type": "image/jpeg"},
+                headers={**person.headers, "Content-Type": content_type},
                 content=data,
             )
         )
@@ -358,6 +367,158 @@ async def test_hearts_can_be_turned_off(
         await run_jobs(clean_db, off)
         response = await api.put(f"/v1/moments/{posted['id']}/heart", headers=priya.headers)
     assert (response.status_code, response.json()["code"]) == (409, "reactions_disabled")
+
+
+# ---------------------------------------------------------------- voice notes
+
+needs_ffmpeg = pytest.mark.skipif(
+    not (shutil.which("ffmpeg") and shutil.which("ffprobe")),
+    reason="needs ffmpeg and ffprobe on PATH (winget install ffmpeg)",
+)
+
+
+@pytest.fixture(scope="module")
+def recordings(tmp_path_factory: pytest.TempPathFactory) -> dict[str, bytes]:
+    """Real files made with ffmpeg: voice notes (AAC in .m4a, like the app records) of 12 s
+    and 5 s, and a short video that isn't a voice note."""
+    if not shutil.which("ffmpeg"):
+        return {}
+    folder = tmp_path_factory.mktemp("recordings")
+
+    def make(name: str, *args: str) -> bytes:
+        out = folder / name
+        subprocess.run(
+            ["ffmpeg", "-v", "error", "-y", *args, str(out)], check=True, capture_output=True
+        )
+        return out.read_bytes()
+
+    def voice(seconds: int) -> bytes:
+        return make(
+            f"voice-{seconds}.m4a",
+            *("-f", "lavfi", "-i", f"sine=frequency=330:duration={seconds}"),
+            *("-c:a", "aac", "-b:a", "48k"),
+        )
+
+    return {
+        "12s": voice(12),
+        "5s": voice(5),
+        "video": make(
+            "clip.mp4",
+            *("-f", "lavfi", "-i", "testsrc=duration=2:size=64x64:rate=10"),
+            *("-f", "lavfi", "-i", "sine=duration=2"),
+            *("-c:v", "mpeg4", "-c:a", "aac", "-shortest"),
+        ),
+    }
+
+
+async def share_voice(
+    api: httpx.AsyncClient, home: Home, person: SupabaseUser, data: bytes, at: datetime = INTENT
+) -> dict[str, Any]:
+    return await share(api, home, person, data, at, kind="voice", content_type="audio/mp4")
+
+
+@pytest.mark.parametrize(("ms", "counts"), [(9_900, False), (9_999, False), (10_000, True)])
+def test_voice_notes_count_from_ten_seconds(settings: Settings, ms: int, counts: bool) -> None:
+    assert long_enough(ms, settings) is counts
+
+
+@needs_ffmpeg
+async def test_share_voice_notes(
+    api: httpx.AsyncClient,
+    session: AsyncSession,
+    clean_db: AsyncEngine,
+    settings: Settings,
+    fake_supabase: FakeSupabase,
+    recorder: RecordingPushSender,
+    recordings: dict[str, bytes],
+) -> None:
+    home, priya, arjun = await signed_in_home(session, fake_supabase)
+    long = await share_voice(api, home, priya, recordings["12s"])
+    short = await share_voice(api, home, arjun, recordings["5s"], INTENT + timedelta(hours=1))
+    assert await run_jobs(clean_db, settings) == 2
+
+    posted = await fetch(api, long["id"], priya)
+    assert (posted["kind"], posted["status"], posted["qualifies"]) == ("voice", "published", True)
+    assert posted["qualifying_local_date"] == "2026-09-26"
+    assert 11_900 <= posted["duration_ms"] <= 12_100
+    assert posted["thumbnail_url"] is None and posted["width"] is None
+    audio = await api.get(posted["url"])
+    assert audio.status_code == 200 and audio.content == recordings["12s"]
+    assert audio.headers["content-type"] == "audio/mp4"
+
+    # Posted for everyone to hear, but too short to count for the day.
+    brief = await fetch(api, short["id"], arjun)
+    assert brief["status"] == "published"
+    assert (brief["qualifies"], brief["not_qualifying_reason"]) == (False, "too_short")
+    assert 4_900 <= brief["duration_ms"] <= 5_100
+
+    titles = sorted(push.title for push in recorder.sent)
+    assert titles == ["Arjun sent a voice note", "Priya sent a voice note"]
+    assert recorder.sent[0].body == "Open Nodly to hear it."
+
+
+@needs_ffmpeg
+async def test_voice_notes_that_cant_be_played_are_rejected(
+    api: httpx.AsyncClient,
+    session: AsyncSession,
+    clean_db: AsyncEngine,
+    settings: Settings,
+    fake_supabase: FakeSupabase,
+    recordings: dict[str, bytes],
+) -> None:
+    home, priya, _ = await signed_in_home(session, fake_supabase)
+    garbage = await share_voice(api, home, priya, b"definitely not a recording" * 50)
+    # The recording cut off halfway (ffmpeg writes the index at the end, so it's unreadable).
+    cut = await share_voice(api, home, priya, recordings["12s"][: len(recordings["12s"]) // 2])
+    video = await share_voice(api, home, priya, recordings["video"])
+    await run_jobs(clean_db, settings)
+    for moment in (garbage, cut, video):
+        rejected = await fetch(api, moment["id"], priya)
+        assert (rejected["status"], rejected["reject_reason"]) == ("rejected", "not_audio")
+        assert rejected["qualifies"] is False and rejected["url"] is None
+
+
+@needs_ffmpeg
+async def test_voice_notes_over_the_limit_are_rejected(
+    session: AsyncSession,
+    clean_db: AsyncEngine,
+    fake_supabase: FakeSupabase,
+    tmp_path: Path,
+    test_database_url: str,
+    recordings: dict[str, bytes],
+) -> None:
+    short_limit = make_settings(
+        test_database_url,
+        push_provider="record",
+        media_dir=str(tmp_path / "m"),
+        moment_voice_max_seconds=11,
+    )
+    async with app_client(short_limit, fake_supabase) as api:
+        home, priya, _ = await signed_in_home(session, fake_supabase)
+        started = await share_voice(api, home, priya, recordings["12s"])
+        await run_jobs(clean_db, short_limit)
+        rejected = await fetch(api, started["id"], priya)
+    assert (rejected["status"], rejected["reject_reason"]) == ("rejected", "too_long")
+
+
+@pytest.mark.parametrize(
+    ("kind", "content_type"),
+    [("voice", "image/jpeg"), ("photo", "audio/mp4"), ("voice", "audio/mpeg")],
+)
+async def test_the_file_type_must_fit_the_kind(
+    api: httpx.AsyncClient,
+    session: AsyncSession,
+    fake_supabase: FakeSupabase,
+    kind: str,
+    content_type: str,
+) -> None:
+    home, priya, _ = await signed_in_home(session, fake_supabase)
+    response = await api.post(
+        f"/v1/families/{home.family.id}/moments",
+        headers=priya.headers,
+        json={"kind": kind, "content_type": content_type},
+    )
+    assert response.status_code == 422
 
 
 def test_family_clock_day_is_used_even_across_utc_dates() -> None:

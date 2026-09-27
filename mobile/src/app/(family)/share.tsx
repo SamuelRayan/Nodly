@@ -1,26 +1,36 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
 
 import { useFamily } from '@/api/hooks';
 import { elderName } from '@/components/family';
-import { Icon } from '@/components/icons';
+import { type IconName, Icon } from '@/components/icons';
 import { Button, ErrorNote, Pill, Screen, T, Title } from '@/components/ui';
+import { VOICE_COUNTS_FROM_MS, VoicePlayer, VoiceRecorder } from '@/components/voice';
 import { type PickedPhoto, pickPhoto } from '@/moments/pick';
 import { preparePhoto } from '@/moments/prepare';
-import { enqueuePhoto, type QueueItem, useMomentQueue } from '@/moments/queue';
+import { enqueuePhoto, enqueueVoice, type QueueItem, useMomentQueue } from '@/moments/queue';
 import { useTheme } from '@/theme';
 
 const STEPS = ['queued', 'uploading', 'checking', 'posted'] as const;
 
-/** Share a moment (design F3 → F4 → F5, or F6 when offline). Photos for now. */
+type Mode = 'photo' | 'voice';
+
+interface Recording {
+  uri: string;
+  durationMs: number;
+}
+
+/** Share a moment (design F3 → F4 → F5, or F6 when offline): a photo or a voice note. */
 export default function Share() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { familyId } = useLocalSearchParams<{ familyId: string }>();
+  const { familyId, mode: startMode } = useLocalSearchParams<{ familyId: string; mode?: Mode }>();
   const family = useFamily(familyId);
+  const [mode, setMode] = useState<Mode>(startMode === 'voice' ? 'voice' : 'photo');
   const [picked, setPicked] = useState<PickedPhoto | null>(null);
+  const [recording, setRecording] = useState<Recording | null>(null);
   const [localId, setLocalId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -40,13 +50,14 @@ export default function Share() {
   };
 
   const send = async () => {
-    if (!picked) {
-      return;
-    }
     setBusy(true);
     try {
-      const prepared = await preparePhoto(picked.uri, picked.width, picked.height);
-      setLocalId(enqueuePhoto(prepared, familyId).localId);
+      if (mode === 'voice' && recording) {
+        setLocalId(enqueueVoice(recording.uri, familyId, recording.durationMs).localId);
+      } else if (picked) {
+        const prepared = await preparePhoto(picked.uri, picked.width, picked.height);
+        setLocalId(enqueuePhoto(prepared, familyId).localId);
+      }
     } catch {
       setError(t('errors.generic'));
     } finally {
@@ -72,7 +83,7 @@ export default function Share() {
       <Screen>
         <Stack.Screen options={{ headerShown: false }} />
         {header}
-        <Progress item={item} name={name} preview={picked?.uri} />
+        <Progress item={item} name={name} preview={item.kind === 'photo' ? picked?.uri : undefined} />
         {item.state === 'posted' || item.state === 'rejected' ? (
           <View style={{ gap: 10 }}>
             <Button variant="ink" label={t('moments.done')} onPress={() => router.back()} />
@@ -81,6 +92,7 @@ export default function Share() {
               label={t('moments.share_another')}
               onPress={() => {
                 setPicked(null);
+                setRecording(null);
                 setLocalId(null);
               }}
             />
@@ -98,27 +110,38 @@ export default function Share() {
     <Screen>
       <Stack.Screen options={{ headerShown: false }} />
       {header}
-      <View style={{ flexDirection: 'row', padding: 4, borderRadius: 16, backgroundColor: colors.neutralTint }}>
-        <View
-          style={{
-            flex: 1,
-            height: 44,
-            borderRadius: 12,
-            backgroundColor: colors.ink,
-            flexDirection: 'row',
-            gap: 7,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Icon name="photo" size={20} color={colors.onInk} />
-          <T size={16} weight="bold" color={colors.onInk}>
-            {t('moments.photo')}
-          </T>
-        </View>
+      <View style={{ flexDirection: 'row', gap: 4, padding: 4, borderRadius: 16, backgroundColor: colors.neutralTint }}>
+        <ModeTab icon="photo" label={t('moments.photo')} on={mode === 'photo'} onPress={() => setMode('photo')} />
+        <ModeTab icon="mic" label={t('moments.voice')} on={mode === 'voice'} onPress={() => setMode('voice')} />
       </View>
 
-      {picked ? (
+      {mode === 'voice' ? (
+        recording ? (
+          <View style={{ flex: 1, minHeight: 320, justifyContent: 'center', gap: 16 }}>
+            <VoicePlayer
+              key={recording.uri}
+              url={recording.uri}
+              durationMs={recording.durationMs}
+              label={t('moments.play_yours')}
+              big
+            />
+            <Button
+              variant="secondary"
+              icon="refresh"
+              label={t('moments.record_again')}
+              onPress={() => setRecording(null)}
+            />
+          </View>
+        ) : (
+          <VoiceRecorder
+            onRecorded={(uri, durationMs) => {
+              setError(null);
+              setRecording({ uri, durationMs });
+            }}
+            onError={setError}
+          />
+        )
+      ) : picked ? (
         <View style={{ flex: 1, minHeight: 320, borderRadius: 24, overflow: 'hidden' }}>
           <Image source={{ uri: picked.uri }} style={{ flex: 1 }} resizeMode="cover" />
           <View style={{ position: 'absolute', right: 14, bottom: 14 }}>
@@ -155,10 +178,12 @@ export default function Share() {
       >
         <Icon name="checkCircle" size={22} color={colors.onSand} />
         <T size={15} color={colors.onSand} style={{ flex: 1 }}>
-          {t('moments.counts_note')}
+          {mode === 'voice' && recording && recording.durationMs < VOICE_COUNTS_FROM_MS
+            ? t('moments.voice_short_note')
+            : t('moments.counts_note')}
         </T>
       </View>
-      {picked ? (
+      {(mode === 'photo' && picked) || (mode === 'voice' && recording) ? (
         <Button
           label={t('moments.send_to', { name })}
           icon="arrowRight"
@@ -168,6 +193,42 @@ export default function Share() {
         />
       ) : null}
     </Screen>
+  );
+}
+
+function ModeTab({
+  icon,
+  label,
+  on,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  on: boolean;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: on }}
+      onPress={onPress}
+      style={{
+        flex: 1,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: on ? colors.ink : 'transparent',
+        flexDirection: 'row',
+        gap: 7,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Icon name={icon} size={20} color={on ? colors.onInk : colors.textMuted} />
+      <T size={16} weight="bold" color={on ? colors.onInk : colors.textMuted}>
+        {label}
+      </T>
+    </Pressable>
   );
 }
 
@@ -189,6 +250,10 @@ function Progress({ item, name, preview }: { item: QueueItem; name: string; prev
         <View style={{ width: 216, height: 264, borderRadius: 24, overflow: 'hidden', transform: [{ rotate: '-3deg' }], borderWidth: 6, borderColor: colors.surface }}>
           <Image source={{ uri: preview }} style={{ flex: 1 }} resizeMode="cover" />
         </View>
+      ) : item.kind === 'voice' ? (
+        <View style={{ width: 168, height: 168, borderRadius: 84, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.sand }}>
+          <Icon name="mic" size={64} color={colors.onSand} strokeWidth={2} />
+        </View>
       ) : null}
       {done ? (
         <>
@@ -196,7 +261,9 @@ function Progress({ item, name, preview }: { item: QueueItem; name: string; prev
             {t('moments.sent_title', { name })}
           </Title>
           {item.qualifies ? (
-            <Pill icon="check" label={t('moments.counts')} background={colors.ok} color={colors.onOk} />
+            <View style={{ alignSelf: 'center' }}>
+              <Pill icon="check" label={t('moments.counts')} background={colors.ok} color={colors.onOk} />
+            </View>
           ) : null}
           <T center size={17} color={colors.textMuted} style={{ maxWidth: 300 }}>
             {item.qualifies || !item.notQualifyingReason

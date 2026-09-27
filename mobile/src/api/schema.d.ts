@@ -711,7 +711,7 @@ export interface paths {
         put?: never;
         /**
          * Device Start Moment
-         * @description An elder shares a photo too (the big camera button). Elder posts never earn Plus.
+         * @description An elder shares a moment too (the big camera button). Elder posts never earn Plus.
          */
         post: operations["device_start_moment"];
         delete?: never;
@@ -1881,15 +1881,16 @@ export interface components {
         MomentIn: {
             /**
              * Kind
-             * @description Photos for now; voice notes and videos next
-             * @constant
-             */
-            kind: "photo";
-            /**
-             * Content Type
+             * @description Videos come later
              * @enum {string}
              */
-            content_type: "image/jpeg" | "image/png" | "image/webp";
+            kind: "photo" | "voice";
+            /**
+             * Content Type
+             * @description An image type for a photo; MP4 audio (.m4a) for a voice note
+             * @enum {string}
+             */
+            content_type: "image/jpeg" | "image/png" | "image/webp" | "audio/mp4" | "audio/m4a" | "audio/x-m4a";
         };
         /**
          * MomentKind
@@ -1945,7 +1946,7 @@ export interface components {
             viewed_by_me: boolean;
             /**
              * Reject Reason
-             * @description upload_missing | not_a_photo | too_large (rejected only)
+             * @description Rejected only: upload_missing | not_a_photo | not_audio | too_large | too_long
              */
             reject_reason: string | null;
             /**
@@ -1960,7 +1961,7 @@ export interface components {
             qualifying_local_date: string | null;
             /**
              * Not Qualifying Reason
-             * @description near_duplicate | late | posted_by_elder | no_family_clock
+             * @description near_duplicate | late | posted_by_elder | no_family_clock | too_short
              */
             not_qualifying_reason: string | null;
         };
