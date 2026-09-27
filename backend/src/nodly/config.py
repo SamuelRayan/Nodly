@@ -95,6 +95,20 @@ class Settings(BaseSettings):
     # Family test alerts are the only rate-limited kind (§8).
     help_tests_per_day: int = Field(default=3, ge=1)
 
+    # Moments (CLAUDE.md §9, §10). Files live under MEDIA_DIR (relative to backend/) and are
+    # served through signed links that expire after MEDIA_URL_TTL_SECONDS.
+    media_dir: str = str(BACKEND_DIR / "var" / "media")
+    media_url_ttl_seconds: int = Field(default=600, ge=30)
+    moment_photo_max_bytes: int = Field(default=15 * 1024 * 1024, ge=1024)
+    # A photo within this perceptual-hash distance of one from the family's last
+    # MOMENT_DUPLICATE_LOOKBACK_DAYS is a near-duplicate: still posted, but doesn't qualify.
+    moment_duplicate_max_distance: int = Field(default=6, ge=0, le=64)
+    moment_duplicate_lookback_days: int = Field(default=90, ge=1)
+    # §10: a moment counts for its day only if checked within this long of its intent.
+    moment_qualify_within_hours: float = Field(default=24.0, gt=0)
+    moment_thumbnail_px: int = Field(default=640, ge=64)
+    reactions_enabled: bool = True
+
     @property
     def supabase_issuer(self) -> str | None:
         return f"{self.supabase_url.rstrip('/')}/auth/v1" if self.supabase_url else None

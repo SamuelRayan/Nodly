@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from nodly.api.checkins import ScheduleOut, schedule_out
 from nodly.api.common import SettingsDep, client_ip, problems
 from nodly.api.help import HelpOut, help_out
+from nodly.api.moments import Viewer, new_count
 from nodly.api.pairing import FamilyRef
 from nodly.api.push_tokens import PushTokenIn
 from nodly.api.schemas import DeviceOut, ElderOut, device_out, elder_out
@@ -182,6 +183,7 @@ class DeviceToday(BaseModel):
     family_names: list[str] = Field(
         description='First names of the family members, organizer first ("Priya and Arjun")'
     )
+    new_moments: int = Field(description="Moments from the family this phone hasn't opened yet")
 
 
 async def _device_today(session: AsyncSession, access: DeviceAccess) -> DeviceToday:
@@ -202,6 +204,9 @@ async def _device_today(session: AsyncSession, access: DeviceAccess) -> DeviceTo
         watched_today=day.watched,
         family_alerted_at=day.alert.raised_at if day.alert else None,
         family_names=[name.split()[0] for (name,) in members if name and name.strip()],
+        new_moments=await new_count(
+            session, Viewer(family_id=access.family.id, device_id=access.device.id)
+        ),
     )
 
 

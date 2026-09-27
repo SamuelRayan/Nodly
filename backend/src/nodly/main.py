@@ -18,6 +18,7 @@ from nodly.api import (
     invites,
     me,
     meta,
+    moments,
     pairing,
     push_tokens,
 )
@@ -80,6 +81,7 @@ def create_app(
     app.include_router(elders.router)
     app.include_router(checkins.router)
     app.include_router(help.router)
+    app.include_router(moments.router)
     app.include_router(pairing.router)
     app.include_router(device.router)
     app.include_router(meta.router)

@@ -212,3 +212,11 @@ Format: **what** we decided, then *why*.
   - **Mobile:** `react-native-purchases` and `react-native-purchases-ui` 10.10.2 (Test Store needs 9.9.0+ on Android), `expo-image-picker`, `expo-audio` (+ its required peer `expo-asset`), `expo-video`, `expo-file-system`, `expo-haptics`.
   - Background audio and video playback are off, so there's no foreground service to declare.
   - **Backend:** `pillow` and `imagehash`, for the moments photo checks.
+- **D73. Moment files live in a local media store for the sprint, behind a small storage module (`nodly/media.py`).** The API serves them through HMAC-signed links that expire after 10 minutes. The signature is keyed from `CODE_HASH_SECRET` with its own domain prefix, so there's no new secret.
+  *Supabase Storage needs the project's secret key, which the Supabase connector deliberately doesn't expose. It would also make the recorded demo depend on internet uploads, and add a secret just before the repo goes public. A Supabase Storage store (private bucket, its own signed URLs) replaces `media.py` behind the same functions after Shipaton.*
+  - Uploads are a plain PUT of the file to the API. Photos are small, and the app's persistent queue retries a whole upload. Resumable (TUS) uploads come with video and the Supabase store.
+  - `backend/var/` (the dev media folder) is git-ignored: it holds family photos.
+- **D74. Notification buttons act without opening the app (Android),** through a background task registered with `Notifications.registerTaskAsync` (`expo-task-manager`). Expo's docs say this task also runs on an action tap while the app is in the background or closed, on Android only.
+  - The elder's "I'm okay" checks in, and the family's "I'm on it" acknowledges Help. The notification is then replaced by a quiet confirmation, or by "open Nodly and try again" if the request fails.
+  - While the app is open, the normal response listener handles the same buttons.
+  - iOS needs its own work (Phase 10).

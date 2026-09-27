@@ -2941,6 +2941,1436 @@
         }
       }
     },
+    "/v1/families/{family_id}/moments": {
+      "post": {
+        "tags": [
+          "moments"
+        ],
+        "summary": "Start Moment",
+        "description": "Start sharing a moment: its time (for \"counts for today\") is now, on the server.\nThen PUT the file to upload_path and POST .../complete.",
+        "operationId": "start_moment",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "family_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Family Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MomentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "moments"
+        ],
+        "summary": "Family Moments",
+        "description": "The family's moments, newest first (plus your own still on their way).",
+        "operationId": "family_moments",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "family_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Family Id"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 30,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/moments/{moment_id}": {
+      "get": {
+        "tags": [
+          "moments"
+        ],
+        "summary": "Get Moment",
+        "operationId": "get_moment",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "moments"
+        ],
+        "summary": "Delete Moment",
+        "description": "Delete your own moment (it disappears for everyone).",
+        "operationId": "delete_moment",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/moments/{moment_id}/file": {
+      "put": {
+        "tags": [
+          "moments"
+        ],
+        "summary": "Upload Moment File",
+        "description": "The file's raw bytes (Content-Type as announced). Sending it again replaces it.",
+        "operationId": "upload_moment_file",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/moments/{moment_id}/complete": {
+      "post": {
+        "tags": [
+          "moments"
+        ],
+        "summary": "Complete Moment",
+        "description": "Upload finished: check it. Calling again is harmless.",
+        "operationId": "complete_moment",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/moments/{moment_id}/view": {
+      "post": {
+        "tags": [
+          "moments"
+        ],
+        "summary": "View Moment",
+        "operationId": "view_moment",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/moments/{moment_id}/heart": {
+      "put": {
+        "tags": [
+          "moments"
+        ],
+        "summary": "Heart Moment",
+        "operationId": "heart_moment",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "moments"
+        ],
+        "summary": "Unheart Moment",
+        "operationId": "unheart_moment",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/device/moments": {
+      "get": {
+        "tags": [
+          "moments",
+          "device"
+        ],
+        "summary": "Device Moments",
+        "description": "The family's moments for the elder, newest first, with how many are new.",
+        "operationId": "device_moments",
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 30,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "moments",
+          "device"
+        ],
+        "summary": "Device Start Moment",
+        "description": "An elder shares a photo too (the big camera button). Elder posts never earn Plus.",
+        "operationId": "device_start_moment",
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MomentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/device/moments/{moment_id}/file": {
+      "put": {
+        "tags": [
+          "moments",
+          "device"
+        ],
+        "summary": "Device Upload Moment File",
+        "operationId": "device_upload_moment_file",
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/device/moments/{moment_id}/complete": {
+      "post": {
+        "tags": [
+          "moments",
+          "device"
+        ],
+        "summary": "Device Complete Moment",
+        "operationId": "device_complete_moment",
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/device/moments/{moment_id}/view": {
+      "post": {
+        "tags": [
+          "moments",
+          "device"
+        ],
+        "summary": "Device View Moment",
+        "operationId": "device_view_moment",
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/device/moments/{moment_id}/heart": {
+      "put": {
+        "tags": [
+          "moments",
+          "device"
+        ],
+        "summary": "Device Heart Moment",
+        "description": "\"Send love\".",
+        "operationId": "device_heart_moment",
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "moments",
+          "device"
+        ],
+        "summary": "Device Unheart Moment",
+        "operationId": "device_unheart_moment",
+        "security": [
+          {
+            "DeviceToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "moment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Moment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/media/{key}": {
+      "get": {
+        "tags": [
+          "moments",
+          "moments"
+        ],
+        "summary": "Media",
+        "description": "A moment's file or thumbnail, through a signed link from the API (no login: the\nsignature is the permission, and it expires within minutes).",
+        "operationId": "media",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Key"
+            }
+          },
+          {
+            "name": "exp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Exp"
+            }
+          },
+          {
+            "name": "sig",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Sig"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/elders/{elder_id}/pairing-codes": {
       "post": {
         "tags": [
@@ -4588,6 +6018,11 @@
             "type": "array",
             "title": "Family Names",
             "description": "First names of the family members, organizer first (\"Priya and Arjun\")"
+          },
+          "new_moments": {
+            "type": "integer",
+            "title": "New Moments",
+            "description": "Moments from the family this phone hasn't opened yet"
           }
         },
         "type": "object",
@@ -4598,7 +6033,8 @@
           "schedule",
           "watched_today",
           "family_alerted_at",
-          "family_names"
+          "family_names",
+          "new_moments"
         ],
         "title": "DeviceToday"
       },
@@ -5843,6 +7279,285 @@
         ],
         "title": "MemberOut"
       },
+      "MomentIn": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "photo",
+            "title": "Kind",
+            "description": "Photos for now; voice notes and videos next"
+          },
+          "content_type": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ],
+            "title": "Content Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "content_type"
+        ],
+        "title": "MomentIn"
+      },
+      "MomentKind": {
+        "type": "string",
+        "enum": [
+          "photo",
+          "video",
+          "voice"
+        ],
+        "title": "MomentKind"
+      },
+      "MomentOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MomentKind"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MomentStatus"
+          },
+          "author_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Name"
+          },
+          "by_elder": {
+            "type": "boolean",
+            "title": "By Elder"
+          },
+          "is_mine": {
+            "type": "boolean",
+            "title": "Is Mine"
+          },
+          "intent_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Intent At",
+            "description": "When it was started (the server's clock)"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "description": "Signed link to the file, valid for a few minutes"
+          },
+          "thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Url"
+          },
+          "upload_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upload Path",
+            "description": "PUT the file's bytes here (while awaiting)"
+          },
+          "hearts": {
+            "type": "integer",
+            "title": "Hearts"
+          },
+          "hearted_by_me": {
+            "type": "boolean",
+            "title": "Hearted By Me"
+          },
+          "viewed_by_me": {
+            "type": "boolean",
+            "title": "Viewed By Me"
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason",
+            "description": "upload_missing | not_a_photo | too_large (rejected only)"
+          },
+          "qualifies": {
+            "type": "boolean",
+            "title": "Qualifies",
+            "description": "Counts for the family's free day of Plus (§10)"
+          },
+          "qualifying_local_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qualifying Local Date",
+            "description": "That day, on the family clock"
+          },
+          "not_qualifying_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Not Qualifying Reason",
+            "description": "near_duplicate | late | posted_by_elder | no_family_clock"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "author_name",
+          "by_elder",
+          "is_mine",
+          "intent_at",
+          "published_at",
+          "width",
+          "height",
+          "duration_ms",
+          "url",
+          "thumbnail_url",
+          "upload_path",
+          "hearts",
+          "hearted_by_me",
+          "viewed_by_me",
+          "reject_reason",
+          "qualifies",
+          "qualifying_local_date",
+          "not_qualifying_reason"
+        ],
+        "title": "MomentOut"
+      },
+      "MomentPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MomentOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Before",
+            "description": "Pass as ?before= for the next page"
+          },
+          "new_count": {
+            "type": "integer",
+            "title": "New Count",
+            "description": "Published moments by others that you haven't seen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_before",
+          "new_count"
+        ],
+        "title": "MomentPage"
+      },
+      "MomentStatus": {
+        "type": "string",
+        "enum": [
+          "awaiting_upload",
+          "checking",
+          "published",
+          "rejected"
+        ],
+        "title": "MomentStatus"
+      },
       "Onboarding": {
         "properties": {
           "complete": {
@@ -6402,6 +8117,10 @@
     {
       "name": "help",
       "description": "Help requests for the family: live alerts, \"I'm on it\", resolve, and test alerts. Not an emergency service."
+    },
+    {
+      "name": "moments",
+      "description": "Photos (then voice notes and videos) shared in the family: start, upload, complete, feeds, hearts, and short-lived signed links to the files."
     },
     {
       "name": "device",

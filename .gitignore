@@ -79,3 +79,6 @@ desktop.ini
 
 # The raw Claude Design export; the extracted copy lives in design/.
 /nodly-handoff.zip
+
+# Uploaded moment files in dev (family photos): never commit.
+/backend/var/

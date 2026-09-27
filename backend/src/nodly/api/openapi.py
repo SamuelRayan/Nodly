@@ -47,6 +47,11 @@ TAGS: list[dict[str, Any]] = [
         "description": 'Help requests for the family: live alerts, "I\'m on it", resolve, and '
         "test alerts. Not an emergency service.",
     },
+    {
+        "name": "moments",
+        "description": "Photos (then voice notes and videos) shared in the family: start, upload, "
+        "complete, feeds, hearts, and short-lived signed links to the files.",
+    },
     {"name": "device", "description": "Called by a paired elder phone with its device token."},
     {"name": "meta", "description": "Reference data: timezones and countries. No auth."},
     {"name": "health", "description": "Liveness and readiness probes."},

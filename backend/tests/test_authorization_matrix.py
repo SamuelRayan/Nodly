@@ -15,6 +15,7 @@ from zoneinfo import ZoneInfo
 
 import httpx
 import pytest
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,6 +32,7 @@ from nodly.models import (
     HelpRequest,
     Invite,
     InviteKind,
+    Moment,
     User,
 )
 from nodly.security.credentials import (
@@ -280,6 +282,10 @@ async def pin_2468(world: World) -> dict[str, Any]:
     return {"__body__": {"pin": "2468"}}
 
 
+async def _path_value(name: str, value: str) -> dict[str, Any]:
+    return {name: value}
+
+
 async def _query(params: dict[str, str]) -> dict[str, Any]:
     return {"__query__": params}
 
@@ -311,6 +317,57 @@ async def elder_a_needs_help(world: World) -> dict[str, Any]:
     elder = await world.session.get_one(Elder, world.elder_a)
     await open_request(world.session, elder, datetime.now(UTC), HelpKind.help)
     return {}
+
+
+async def _moment(
+    world: World,
+    status: str,
+    *,
+    user: uuid.UUID | None = None,
+    device: uuid.UUID | None = None,
+) -> uuid.UUID:
+    moment_id = uuid.uuid4()
+    world.session.add(
+        Moment(
+            id=moment_id,
+            family_id=world.family_a,
+            kind="photo",
+            status=status,
+            author_user_id=user,
+            author_device_id=device,
+            by_elder=device is not None,
+            intent_at=NOW,
+            content_type="image/jpeg",
+            storage_key=f"{world.family_a}/{moment_id}/original.jpg",
+            published_at=NOW if status == "published" else None,
+        )
+    )
+    await world.session.commit()
+    return moment_id
+
+
+async def members_photo(world: World) -> dict[str, Any]:
+    """A published photo in family A, shared by the member."""
+    return {"moment_id": await _moment(world, "published", user=world.member_a.id)}
+
+
+async def organizers_photo(world: World, status: str = "published") -> dict[str, Any]:
+    return {"moment_id": await _moment(world, status, user=world.organizer_a.id)}
+
+
+async def organizers_upload(world: World) -> dict[str, Any]:
+    """Waiting for its file; only the organizer (its author) may send it."""
+    return await organizers_photo(world, "awaiting_upload")
+
+
+async def phones_upload(world: World) -> dict[str, Any]:
+    """Waiting for its file from elder A's phone."""
+    device = await world.session.scalar(
+        select(ElderDevice.id).where(
+            ElderDevice.token_hash == hash_device_token(world.device_tokens["device"])
+        )
+    )
+    return {"moment_id": await _moment(world, "awaiting_upload", device=device)}
 
 
 async def transfer_target(world: World) -> dict[str, Any]:
@@ -449,6 +506,94 @@ CASES = [
         device_only(200, other_device=409),
         prepare=elder_a_needs_help,
     ),
+    # moments (sprint S2): only a moment's author uploads, completes or deletes it
+    Case(
+        "POST",
+        "/v1/families/{family_id}/moments",
+        family_a(member=201, organizer=201),
+        body={"kind": "photo", "content_type": "image/jpeg"},
+    ),
+    Case("GET", "/v1/families/{family_id}/moments", family_a(member=200, organizer=200)),
+    Case(
+        "GET", "/v1/moments/{moment_id}", family_a(member=200, organizer=200), prepare=members_photo
+    ),
+    Case(
+        "PUT",
+        "/v1/moments/{moment_id}/file",
+        family_a(member=404, organizer=200),
+        body={"bytes": "a photo"},
+        prepare=organizers_upload,
+    ),
+    Case(
+        "POST",
+        "/v1/moments/{moment_id}/complete",
+        family_a(member=404, organizer=200),
+        prepare=organizers_upload,
+    ),
+    Case(
+        "POST",
+        "/v1/moments/{moment_id}/view",
+        family_a(member=204, organizer=204),
+        prepare=members_photo,
+    ),
+    Case(
+        "PUT",
+        "/v1/moments/{moment_id}/heart",
+        family_a(member=200, organizer=200),
+        prepare=members_photo,
+    ),
+    Case(
+        "DELETE",
+        "/v1/moments/{moment_id}/heart",
+        family_a(member=200, organizer=200),
+        prepare=members_photo,
+    ),
+    Case(
+        "DELETE",
+        "/v1/moments/{moment_id}",
+        family_a(member=403, organizer=204),
+        prepare=organizers_photo,
+    ),
+    Case("GET", "/v1/device/moments", device_only()),
+    Case(
+        "POST",
+        "/v1/device/moments",
+        device_only(201),
+        body={"kind": "photo", "content_type": "image/jpeg"},
+    ),
+    Case(
+        "PUT",
+        "/v1/device/moments/{moment_id}/file",
+        device_only(200, other_device=404),
+        body={"bytes": "a photo"},
+        prepare=phones_upload,
+    ),
+    Case(
+        "POST",
+        "/v1/device/moments/{moment_id}/complete",
+        device_only(200, other_device=404),
+        prepare=phones_upload,
+    ),
+    Case(
+        "POST",
+        "/v1/device/moments/{moment_id}/view",
+        device_only(204, other_device=404),
+        prepare=members_photo,
+    ),
+    Case(
+        "PUT",
+        "/v1/device/moments/{moment_id}/heart",
+        device_only(200, other_device=404),
+        prepare=members_photo,
+    ),
+    Case(
+        "DELETE",
+        "/v1/device/moments/{moment_id}/heart",
+        device_only(200, other_device=404),
+        prepare=members_photo,
+    ),
+    # Files come through signed links only: without a valid signature, nobody gets in.
+    Case("GET", "/v1/media/{key}", public(403), prepare=lambda world: _path_value("key", "x.jpg")),
 ]
 
 
