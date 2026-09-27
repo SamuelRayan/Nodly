@@ -8,6 +8,7 @@ from fastapi import FastAPI
 
 from nodly import __version__
 from nodly.api import (
+    billing,
     checkins,
     dev,
     device,
@@ -82,6 +83,7 @@ def create_app(
     app.include_router(checkins.router)
     app.include_router(help.router)
     app.include_router(moments.router)
+    app.include_router(billing.router)
     app.include_router(pairing.router)
     app.include_router(device.router)
     app.include_router(meta.router)

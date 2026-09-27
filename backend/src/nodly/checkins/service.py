@@ -347,3 +347,30 @@ async def elder_day(session: AsyncSession, elder: Elder, now: datetime) -> Elder
         last_checkin=last_checkin,
         week=week,
     )
+
+
+async def history(session: AsyncSession, elder: Elder, now: datetime, days: int) -> list[DayRecord]:
+    """The last `days` local days, oldest first, today last: okay, missed or nothing."""
+    tz = ZoneInfo(checkin_settings(elder).timezone)
+    today = local_today(now, tz)
+    first = today - timedelta(days=days - 1)
+    checked = set(
+        await session.scalars(
+            select(Checkin.local_date).where(
+                Checkin.elder_id == elder.id, Checkin.local_date.between(first, today)
+            )
+        )
+    )
+    missed = set(
+        await session.scalars(
+            select(EngineAction.local_date).where(
+                EngineAction.elder_id == elder.id,
+                EngineAction.action == EngineActionKind.missed,
+                EngineAction.local_date.between(first, today),
+            )
+        )
+    )
+    return [
+        DayRecord(day, "okay" if day in checked else "missed" if day in missed else "none")
+        for day in (first + timedelta(days=offset) for offset in range(days))
+    ]

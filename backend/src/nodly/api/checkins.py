@@ -4,25 +4,27 @@ import uuid
 from datetime import date, datetime
 from typing import Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nodly.api.common import USER_AUTH_ERRORS, problems
+from nodly.api.common import USER_AUTH_ERRORS, SettingsDep, problems
 from nodly.audit import record_audit
 from nodly.auth.access import ElderMemberAccess
+from nodly.billing.access import evaluate_access
 from nodly.checkins.engine import Schedule
 from nodly.checkins.service import (
     CheckinStatus,
     DayMark,
     ElderDay,
     elder_day,
+    history,
     record_checkin,
 )
 from nodly.clock import utcnow
 from nodly.db import SessionDep
-from nodly.errors import ConflictError
+from nodly.errors import ConflictError, ForbiddenError, InvalidInputError
 from nodly.models import ActorType, Checkin, CheckinSource, Elder, User
 
 router = APIRouter(tags=["checkins"])
@@ -196,3 +198,44 @@ async def ack_alert(access: ElderMemberAccess, session: SessionDep) -> CheckinSt
         )
         await session.commit()
     return await _status(session, access)
+
+
+class PlusRequiredError(ForbiddenError):
+    code = "plus_required"
+    title = "This needs Nodly Plus"
+
+
+class HistoryOut(BaseModel):
+    days: list[DayOut] = Field(description="Oldest first, today last")
+    free_days: int = Field(description="How far back history goes without Plus")
+    plus_days: int = Field(description="How far back it goes with Plus")
+
+
+@router.get(
+    "/v1/elders/{elder_id}/checkins/history",
+    responses=problems(*USER_AUTH_ERRORS, 404, 422),
+)
+async def checkin_history(
+    access: ElderMemberAccess,
+    session: SessionDep,
+    settings: SettingsDep,
+    days: int = Query(default=7, ge=1),
+) -> HistoryOut:
+    """Check-in history by local day. The last 7 days are free; up to 30 needs Nodly Plus
+    (§10), checked here on the server (403 plus_required)."""
+    if days > settings.history_plus_days:
+        raise InvalidInputError(f"History goes back at most {settings.history_plus_days} days.")
+    now = utcnow()
+    if days > settings.history_free_days:
+        access_now = await evaluate_access(session, access.family.id, now)
+        if not access_now.has_plus:
+            raise PlusRequiredError(
+                f"More than {settings.history_free_days} days of history needs Nodly Plus.",
+                free_days=settings.history_free_days,
+            )
+    records = await history(session, access.elder, now, days)
+    return HistoryOut(
+        days=[DayOut(local_date=record.day, state=record.state) for record in records],
+        free_days=settings.history_free_days,
+        plus_days=settings.history_plus_days,
+    )

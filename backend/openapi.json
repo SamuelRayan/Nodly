@@ -2472,6 +2472,106 @@
         }
       }
     },
+    "/v1/elders/{elder_id}/checkins/history": {
+      "get": {
+        "tags": [
+          "checkins"
+        ],
+        "summary": "Checkin History",
+        "description": "Check-in history by local day. The last 7 days are free; up to 30 needs Nodly Plus\n(§10), checked here on the server (403 plus_required).",
+        "operationId": "checkin_history",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 7,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/families/{family_id}/help": {
       "get": {
         "tags": [
@@ -4371,6 +4471,315 @@
         }
       }
     },
+    "/v1/families/{family_id}/access": {
+      "get": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Family Access",
+        "description": "Does this family have Plus right now, why, until when, and is a Day Pass on offer.\nThe app polls this after a purchase; it never unlocks anything by itself.",
+        "operationId": "family_access",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "family_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Family Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/families/{family_id}/access/day-pass-eligibility": {
+      "get": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Day Pass Eligibility",
+        "description": "§10: offered only without Plus, and without a moment on its way that would unlock\ntoday for free.",
+        "operationId": "day_pass_eligibility",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "family_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Family Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayPassOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/families/{family_id}/access/refresh": {
+      "post": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Refresh Access",
+        "description": "After a purchase: ask RevenueCat (server to server) for this member's purchases, record\nany new ones for this family, then answer like GET .../access. Safe to repeat.",
+        "operationId": "refresh_access",
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "family_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Family Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (`onboarding_required`, `organizer_required`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in unavailable (`auth_unavailable`, `auth_not_configured`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not visible to you",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/billing/revenuecat/webhook": {
+      "post": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Revenuecat Webhook",
+        "description": "RevenueCat's events (purchases, renewals, refunds). Checked against the Authorization\nheader set in RevenueCat's dashboard (and its HMAC signature when configured). Each event\nid is handled once; RevenueCat's retries are answered without doing anything again.",
+        "operationId": "revenuecat_webhook",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (`validation_error`, `invalid_code`, ...)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/elders/{elder_id}/pairing-codes": {
       "post": {
         "tags": [
@@ -5285,6 +5694,57 @@
   },
   "components": {
     "schemas": {
+      "AccessOut": {
+        "properties": {
+          "has_plus": {
+            "type": "boolean",
+            "title": "Has Plus"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources",
+            "description": "What gives Plus now: moment, day_pass, subscription"
+          },
+          "plus_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plus Until",
+            "description": "When the current run of Plus ends"
+          },
+          "today": {
+            "$ref": "#/components/schemas/TodayMomentOut"
+          },
+          "day_pass": {
+            "$ref": "#/components/schemas/DayPassOut"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At",
+            "description": "The server's clock when this was decided"
+          }
+        },
+        "type": "object",
+        "required": [
+          "has_plus",
+          "sources",
+          "plus_until",
+          "today",
+          "day_pass",
+          "checked_at"
+        ],
+        "title": "AccessOut"
+      },
       "AlertOut": {
         "properties": {
           "raised_at": {
@@ -5757,6 +6217,32 @@
           "state"
         ],
         "title": "DayOut"
+      },
+      "DayPassOut": {
+        "properties": {
+          "offered": {
+            "type": "boolean",
+            "title": "Offered"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Why not: has_plus | moment_pending"
+          }
+        },
+        "type": "object",
+        "required": [
+          "offered",
+          "reason"
+        ],
+        "title": "DayPassOut"
       },
       "DeviceCheckinIn": {
         "properties": {
@@ -6876,6 +7362,35 @@
           "cancelled"
         ],
         "title": "HelpStatus"
+      },
+      "HistoryOut": {
+        "properties": {
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/DayOut"
+            },
+            "type": "array",
+            "title": "Days",
+            "description": "Oldest first, today last"
+          },
+          "free_days": {
+            "type": "integer",
+            "title": "Free Days",
+            "description": "How far back history goes without Plus"
+          },
+          "plus_days": {
+            "type": "integer",
+            "title": "Plus Days",
+            "description": "How far back it goes with Plus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "days",
+          "free_days",
+          "plus_days"
+        ],
+        "title": "HistoryOut"
       },
       "InviteCreated": {
         "properties": {
@@ -8081,6 +8596,65 @@
           "suggestions"
         ],
         "title": "TimezoneSuggestionsOut"
+      },
+      "TodayMomentOut": {
+        "properties": {
+          "local_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Date",
+            "description": "Today on the family clock (null: no elder yet)"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "shared": {
+            "type": "boolean",
+            "title": "Shared",
+            "description": "A qualifying moment already earned today"
+          },
+          "pending": {
+            "type": "boolean",
+            "title": "Pending",
+            "description": "A family member's moment is on its way; it may still count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "local_date",
+          "timezone",
+          "shared",
+          "pending"
+        ],
+        "title": "TodayMomentOut"
+      },
+      "WebhookOut": {
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "title": "Outcome"
+          }
+        },
+        "type": "object",
+        "required": [
+          "outcome"
+        ],
+        "title": "WebhookOut"
       }
     },
     "securitySchemes": {

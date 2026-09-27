@@ -1,6 +1,14 @@
 """All models, imported here so Base.metadata is complete for Alembic and tests."""
 
 from nodly.models.base import Base
+from nodly.models.billing import (
+    AccessGrant,
+    GrantSource,
+    Purchase,
+    PurchaseKind,
+    PurchaseSource,
+    RevenueCatEvent,
+)
 from nodly.models.checkins import (
     AlertResolution,
     Checkin,
@@ -30,6 +38,7 @@ from nodly.models.moments import Moment, MomentKind, MomentReaction, MomentStatu
 from nodly.models.throttle import ThrottleCounter
 
 __all__ = [
+    "AccessGrant",
     "ActorType",
     "AlertResolution",
     "AuditLog",
@@ -45,6 +54,7 @@ __all__ = [
     "Family",
     "FamilyMember",
     "FamilyRole",
+    "GrantSource",
     "HelpEvent",
     "HelpEventKind",
     "HelpKind",
@@ -59,8 +69,12 @@ __all__ = [
     "MomentReaction",
     "MomentStatus",
     "MomentView",
+    "Purchase",
+    "PurchaseKind",
+    "PurchaseSource",
     "PushProvider",
     "PushToken",
+    "RevenueCatEvent",
     "ThrottleCounter",
     "User",
 ]

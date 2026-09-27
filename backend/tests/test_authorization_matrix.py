@@ -594,6 +594,18 @@ CASES = [
     ),
     # Files come through signed links only: without a valid signature, nobody gets in.
     Case("GET", "/v1/media/{key}", public(403), prepare=lambda world: _path_value("key", "x.jpg")),
+    # Nodly Plus (sprint S4): family members only; an elder's phone never reaches billing.
+    Case("GET", "/v1/families/{family_id}/access", family_a(member=200, organizer=200)),
+    Case(
+        "GET",
+        "/v1/families/{family_id}/access/day-pass-eligibility",
+        family_a(member=200, organizer=200),
+    ),
+    # No RevenueCat key in these settings: members get through to 503 billing_not_configured.
+    Case("POST", "/v1/families/{family_id}/access/refresh", family_a(member=503, organizer=503)),
+    Case("GET", "/v1/elders/{elder_id}/checkins/history", family_a(member=200, organizer=200)),
+    # Only RevenueCat, by the Authorization header from its dashboard (none configured here).
+    Case("POST", "/v1/billing/revenuecat/webhook", public(401), body={"event": {"id": "e"}}),
 ]
 
 

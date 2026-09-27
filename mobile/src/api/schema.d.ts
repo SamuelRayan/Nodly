@@ -473,6 +473,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/elders/{elder_id}/checkins/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Checkin History
+         * @description Check-in history by local day. The last 7 days are free; up to 30 needs Nodly Plus
+         *     (§10), checked here on the server (403 plus_required).
+         */
+        get: operations["checkin_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/families/{family_id}/help": {
         parameters: {
             query?: never;
@@ -813,6 +834,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/families/{family_id}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Family Access
+         * @description Does this family have Plus right now, why, until when, and is a Day Pass on offer.
+         *     The app polls this after a purchase; it never unlocks anything by itself.
+         */
+        get: operations["family_access"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/families/{family_id}/access/day-pass-eligibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Day Pass Eligibility
+         * @description §10: offered only without Plus, and without a moment on its way that would unlock
+         *     today for free.
+         */
+        get: operations["day_pass_eligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/families/{family_id}/access/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh Access
+         * @description After a purchase: ask RevenueCat (server to server) for this member's purchases, record
+         *     any new ones for this family, then answer like GET .../access. Safe to repeat.
+         */
+        post: operations["refresh_access"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/billing/revenuecat/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revenuecat Webhook
+         * @description RevenueCat's events (purchases, renewals, refunds). Checked against the Authorization
+         *     header set in RevenueCat's dashboard (and its HMAC signature when configured). Each event
+         *     id is handled once; RevenueCat's retries are answered without doing anything again.
+         */
+        post: operations["revenuecat_webhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/elders/{elder_id}/pairing-codes": {
         parameters: {
             query?: never;
@@ -1128,6 +1234,29 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AccessOut */
+        AccessOut: {
+            /** Has Plus */
+            has_plus: boolean;
+            /**
+             * Sources
+             * @description What gives Plus now: moment, day_pass, subscription
+             */
+            sources: string[];
+            /**
+             * Plus Until
+             * @description When the current run of Plus ends
+             */
+            plus_until: string | null;
+            today: components["schemas"]["TodayMomentOut"];
+            day_pass: components["schemas"]["DayPassOut"];
+            /**
+             * Checked At
+             * Format: date-time
+             * @description The server's clock when this was decided
+             */
+            checked_at: string;
+        };
         /** AlertOut */
         AlertOut: {
             /**
@@ -1325,6 +1454,16 @@ export interface components {
              * @enum {string}
              */
             state: "okay" | "missed" | "none";
+        };
+        /** DayPassOut */
+        DayPassOut: {
+            /** Offered */
+            offered: boolean;
+            /**
+             * Reason
+             * @description Why not: has_plus | moment_pending
+             */
+            reason: string | null;
         };
         /** DeviceCheckinIn */
         DeviceCheckinIn: {
@@ -1727,6 +1866,24 @@ export interface components {
          * @enum {string}
          */
         HelpStatus: "open" | "acknowledged" | "resolved" | "cancelled";
+        /** HistoryOut */
+        HistoryOut: {
+            /**
+             * Days
+             * @description Oldest first, today last
+             */
+            days: components["schemas"]["DayOut"][];
+            /**
+             * Free Days
+             * @description How far back history goes without Plus
+             */
+            free_days: number;
+            /**
+             * Plus Days
+             * @description How far back it goes with Plus
+             */
+            plus_days: number;
+        };
         /** InviteCreated */
         InviteCreated: {
             /**
@@ -2209,6 +2366,31 @@ export interface components {
         TimezoneSuggestionsOut: {
             /** Suggestions */
             suggestions: components["schemas"]["TimezoneSuggestionOut"][];
+        };
+        /** TodayMomentOut */
+        TodayMomentOut: {
+            /**
+             * Local Date
+             * @description Today on the family clock (null: no elder yet)
+             */
+            local_date: string | null;
+            /** Timezone */
+            timezone: string | null;
+            /**
+             * Shared
+             * @description A qualifying moment already earned today
+             */
+            shared: boolean;
+            /**
+             * Pending
+             * @description A family member's moment is on its way; it may still count
+             */
+            pending: boolean;
+        };
+        /** WebhookOut */
+        WebhookOut: {
+            /** Outcome */
+            outcome: string;
         };
     };
     responses: never;
@@ -4105,6 +4287,75 @@ export interface operations {
             };
         };
     };
+    checkin_history: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path: {
+                elder_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, `invalid_code`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     live_help: {
         parameters: {
             query?: never;
@@ -5481,6 +5732,245 @@ export interface operations {
                 };
             };
             /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    family_access: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    day_pass_eligibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayPassOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    refresh_access: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    revenuecat_webhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, `invalid_code`, ...) */
             422: {
                 headers: {
                     [name: string]: unknown;

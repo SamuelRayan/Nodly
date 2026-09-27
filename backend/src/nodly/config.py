@@ -114,6 +114,26 @@ class Settings(BaseSettings):
     ffprobe_path: str = "ffprobe"
     reactions_enabled: bool = True
 
+    # Nodly Plus (CLAUDE.md §10). RevenueCat's REST API confirms purchases server-side; without
+    # the secret key, /access/refresh answers 503 billing_not_configured (webhooks still work).
+    revenuecat_api_url: str = "https://api.revenuecat.com/v1"
+    revenuecat_secret_api_key: SecretStr | None = None
+    # The exact Authorization header RevenueCat sends with webhooks (set in its dashboard).
+    # Without it, the webhook endpoint refuses everything.
+    revenuecat_webhook_authorization: SecretStr | None = None
+    # Optional HMAC signing secret for webhooks (X-RevenueCat-Webhook-Signature).
+    revenuecat_webhook_signing_secret: SecretStr | None = None
+    plus_entitlement_id: str = "plus"
+    day_pass_product_ids: list[str] = ["day_pass"]
+    plus_subscription_product_ids: list[str] = ["plus_monthly", "plus_annual"]
+    day_pass_hours: float = Field(default=24.0, gt=0)
+    # Sandbox purchases (RevenueCat Test Store, store sandboxes) grant Plus only where this is
+    # on. Off by default in prod, and prod refuses to turn it on.
+    billing_accept_sandbox: bool = True
+    # Check-in history: the free window, and how far back Plus reaches (§10).
+    history_free_days: int = Field(default=7, ge=1)
+    history_plus_days: int = Field(default=30, ge=1)
+
     @property
     def supabase_issuer(self) -> str | None:
         return f"{self.supabase_url.rstrip('/')}/auth/v1" if self.supabase_url else None
@@ -139,6 +159,10 @@ class Settings(BaseSettings):
                 raise ValueError("SUPABASE_URL is required in staging and prod")
             if self.code_hash_secret.get_secret_value().startswith(DEV_SECRET_PREFIX):
                 raise ValueError("CODE_HASH_SECRET must be a real secret in staging and prod")
+        if self.env == "prod":
+            if "billing_accept_sandbox" in self.model_fields_set and self.billing_accept_sandbox:
+                raise ValueError("BILLING_ACCEPT_SANDBOX must be false in prod")
+            self.billing_accept_sandbox = False
         return self
 
 

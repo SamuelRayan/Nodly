@@ -18,6 +18,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nodly.billing.access import grant_moment_credit
 from nodly.config import Settings
 from nodly.family_clock import family_date, family_timezone
 from nodly.jobs.queue import enqueue
@@ -271,6 +272,8 @@ async def verify(session: AsyncSession, moment: Moment, now: datetime, settings:
     moment.not_qualifying_reason = reason
     moment.status = MomentStatus.published
     moment.published_at = now
+    # §10: the family's free day of Plus, in the same transaction as the verdict.
+    await grant_moment_credit(session, moment)
     await session.commit()
 
 
