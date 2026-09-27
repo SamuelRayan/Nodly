@@ -61,6 +61,29 @@ Fixed along the way:
 
 Also added: `scripts/demo_state.py` (dev only). It moves check-in times to now + N minutes (resetting today) and closes leftover alerts. The leftover Help alert from day 1 is closed.
 
+### Day 2 (2026-09-27): S2, photo moments ✅
+- **Backend:**
+  - pipeline: intent (server time) → PUT file → complete → the worker checks it (file present, real JPEG/PNG/WebP, size limit, thumbnail, perceptual hash) → published | rejected with a reason
+  - qualifying per §10: not an elder's post, checked within 24 h, not a near-duplicate of the family's last 90 days; the day comes from the family clock
+  - feeds with "new" counts, views, hearts, delete your own, signed links that expire (local media store, D73)
+  - new moments push to the family and the elders' phones
+  - 399 backend tests pass
+- **App:**
+  - a persistent upload queue: survives restarts and offline, retries with backoff
+  - photos resized (longest side 1600 px) and saved as JPEG before upload
+  - Share screen (F3–F6) with Waiting / Sending / Checking / Posted and "Counts for today"
+  - "Today's moment" on the dashboard; a moments grid and viewer with hearts
+  - elder viewer (E6): one at a time, big Next/Previous, Send love, a camera to share back; the Moments tile shows "N new"; the thank-you screen offers new moments right after "I'm okay"
+- **Verified on two emulators:**
+  - The family shared a photo while the API was down: "Couldn't send yet. You're offline." Then the app was killed; the queue file kept the item.
+  - The API came back and the app relaunched: the queue finished on its own ("posted", qualifies).
+  - The dashboard said "Shared at 12:18 PM · counts for today".
+  - The elder got "Samuel sent a photo" and the home showed "Moments · 1 new". After "I'm okay", the thank-you screen offered it; the viewer showed it, marked it seen, and Send love worked.
+- **Known gaps:**
+  - If the API can't be reached **when the family app starts**, it waits on a spinner. It needs `/v1/me`, which isn't cached. An open app is fine offline.
+  - Airplane mode can't be tested on emulators: `adb reverse` doesn't use the network.
+  - Voice notes and video are next (S3).
+
 ### Found today
 - **Hermes on Android has no `Intl.RelativeTimeFormat` (nor `PluralRules`).** "12 minutes ago" is now built from plain strings.
 - **An emulator restored from a quick-boot snapshot lost its display:** every app went black and ours reported an ANR ("no focused window"). A cold boot (`-no-snapshot-load`) fixed it. Use cold boots for now.

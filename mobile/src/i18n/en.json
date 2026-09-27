@@ -372,8 +372,9 @@
     "elder_sent": "Sent to your family",
     "new_count": "{{n}} new",
     "all_seen": "All seen",
-    "family_sent": "Your family sent you {{n}} new",
+    "family_sent": "Your family sent you {{n}} new moments",
     "see_moments": "See moments",
-    "camera_denied": "Nodly needs the camera to take a photo. You can allow it in Settings."
+    "camera_denied": "Nodly needs the camera to take a photo. You can allow it in Settings.",
+    "family_sent_one": "Your family sent you a new moment"
   }
 }

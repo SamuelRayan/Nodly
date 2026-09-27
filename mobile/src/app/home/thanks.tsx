@@ -64,7 +64,9 @@ export default function Thanks() {
           }}
         >
           <T size={22} weight="bold">
-            {t('moments.family_sent', { n: today.data.new_moments })}
+            {today.data.new_moments === 1
+              ? t('moments.family_sent_one')
+              : t('moments.family_sent', { n: today.data.new_moments })}
           </T>
           <Button
             icon="arrowRight"
