@@ -76,3 +76,6 @@ desktop.ini
 # ---------- Local media scratch (ffmpeg experiments etc.) ----------
 /tmp/
 *.log
+
+# The raw Claude Design export; the extracted copy lives in design/.
+/nodly-handoff.zip
