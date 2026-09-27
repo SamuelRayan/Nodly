@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { queryClient } from '@/api/query';
 import { SessionProvider, useMe, useSession } from '@/auth/session';
 import { Loading } from '@/components/ui';
+import { startMomentQueue } from '@/moments/queue';
 import { registerForPush } from '@/push/notifications';
 import { useNotificationRouting } from '@/push/useNotificationRouting';
 import { useAppStore } from '@/state/app';
@@ -69,6 +70,10 @@ function RootNavigator() {
 
   // Taps on notifications and their buttons ("I'm okay", "I'm on it").
   useNotificationRouting(status === 'elder' ? 'elder' : status === 'family' ? 'family' : 'other');
+
+  // Keep sending shared moments (after restarts and offline spells) once signed in or paired.
+  const signedIn = status === 'family' || status === 'elder';
+  useEffect(() => (signedIn ? startMomentQueue() : undefined), [signedIn]);
 
   // Register this phone for push once it knows who it belongs to.
   useEffect(() => {

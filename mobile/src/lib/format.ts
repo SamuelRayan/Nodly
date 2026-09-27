@@ -21,6 +21,11 @@ export function dateTime(iso: string, timeZone: string): string {
   }).format(new Date(iso));
 }
 
+/** Today's date in `timeZone` as YYYY-MM-DD (the family clock's "today"), on the server's clock. */
+export function localDateIn(timeZone: string, at: Date = new Date(serverNow())): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(at);
+}
+
 /** "Saturday, 26 September" for today in `timeZone`. */
 export function longDate(timeZone: string, at: Date = new Date(serverNow())): string {
   return new Intl.DateTimeFormat(i18n.language, {

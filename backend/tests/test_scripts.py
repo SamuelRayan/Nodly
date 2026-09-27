@@ -117,3 +117,31 @@ async def test_demo_state_is_dev_only(settings) -> None:  # type: ignore[no-unty
         assert "dev only" in str(error)
     else:
         raise AssertionError("ran outside ENV=dev")
+
+
+async def test_a_reset_day_still_notifies(session) -> None:  # type: ignore[no-untyped-def]
+    """Resetting today (demo_state.py) must not swallow the next reminder's notification."""
+    from datetime import UTC, datetime, time, timedelta
+
+    from sqlalchemy import func, select
+
+    from nodly.checkins.service import run_tick
+    from nodly.models import Job
+    from tests.test_checkins import make_home
+
+    demo = load_script("demo_state")
+    home = await make_home(session)
+    remind = datetime(2026, 9, 26, 3, 30, tzinfo=UTC)  # 09:00 in Kolkata
+    assert await run_tick(session, remind) == 1
+    await demo.set_schedule(
+        session,
+        home.elder,
+        demo.DemoSchedule(time(9, 5), time(12, 0), 60),
+        reset_today=True,
+        now=remind,
+    )
+    assert await run_tick(session, remind + timedelta(minutes=5)) == 1
+    jobs = await session.scalar(
+        select(func.count()).select_from(Job).where(Job.type == "checkins.notify")
+    )
+    assert jobs == 2

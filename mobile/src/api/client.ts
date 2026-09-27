@@ -32,19 +32,28 @@ api.use({
     }
   },
   async onRequest({ request }) {
-    const { mode, deviceToken } = useAppStore.getState();
-    if (mode === 'elder' && deviceToken) {
-      request.headers.set('Authorization', `Bearer ${deviceToken}`);
-    } else if (mode === 'family') {
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      if (token) {
-        request.headers.set('Authorization', `Bearer ${token}`);
-      }
+    const authorization = await authorizationHeader();
+    if (authorization) {
+      request.headers.set('Authorization', authorization);
     }
     return request;
   },
 });
+
+/** "Bearer ..." for this phone: the device token in elder mode, the Supabase JWT in family mode
+ * (getSession() refreshes it when needed). Also used by uploads, which don't go through `api`. */
+export async function authorizationHeader(): Promise<string | null> {
+  const { mode, deviceToken } = useAppStore.getState();
+  if (mode === 'elder' && deviceToken) {
+    return `Bearer ${deviceToken}`;
+  }
+  if (mode === 'family') {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    return token ? `Bearer ${token}` : null;
+  }
+  return null;
+}
 
 type Result<T> = { data?: T; error?: unknown; response: Response };
 

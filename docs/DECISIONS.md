@@ -216,7 +216,14 @@ Format: **what** we decided, then *why*.
   *Supabase Storage needs the project's secret key, which the Supabase connector deliberately doesn't expose. It would also make the recorded demo depend on internet uploads, and add a secret just before the repo goes public. A Supabase Storage store (private bucket, its own signed URLs) replaces `media.py` behind the same functions after Shipaton.*
   - Uploads are a plain PUT of the file to the API. Photos are small, and the app's persistent queue retries a whole upload. Resumable (TUS) uploads come with video and the Supabase store.
   - `backend/var/` (the dev media folder) is git-ignored: it holds family photos.
-- **D74. Notification buttons act without opening the app (Android),** through a background task registered with `Notifications.registerTaskAsync` (`expo-task-manager`). Expo's docs say this task also runs on an action tap while the app is in the background or closed, on Android only.
-  - The elder's "I'm okay" checks in, and the family's "I'm on it" acknowledges Help. The notification is then replaced by a quiet confirmation, or by "open Nodly and try again" if the request fails.
-  - While the app is open, the normal response listener handles the same buttons.
-  - iOS needs its own work (Phase 10).
+- **D74. Notification buttons: a background task handles them where Android lets it** (`Notifications.registerTaskAsync`, `expo-task-manager`). The elder's "I'm okay" checks in and the family's "I'm on it" acknowledges Help, then a quiet confirmation replaces the notification. While the app is open, the normal response listener handles the same buttons. See D75 for when buttons can appear at all.
+- **D75. Help alerts and reminders stay ordinary notifications; tapping one opens straight to a one-tap screen.**
+  - Tested on emulators (2026-09-27): the Expo Push Service sends title/body pushes as FCM notification messages. While the app isn't in the foreground, Android draws those itself, without our categories, so there are no buttons.
+  - Data-only pushes would be presented by the app with buttons, but they rely on JS running in the background, which Android doesn't guarantee (Doze). A Help alert must never silently fail to appear.
+  - Sending straight through FCM (natively presented data messages) needs a Firebase service-account key on the server and native FCM tokens.
+  - So, for Shipaton:
+    - tapping a Help notification opens the full-screen alert with its big "I'm on it"
+    - tapping a reminder opens the home with its big "I'm okay"
+    - buttons appear, and work, whenever the app shows the notification itself (app in the foreground)
+  - **After Shipaton:** send through FCM directly with data messages presented natively, and test on a physical Samsung (One UI).
+  - Also: a force-stopped Android app receives no FCM messages until it's opened again (Android's "stopped" state). Swiping it away from recents is fine.

@@ -15,6 +15,9 @@ export const keys = {
   deviceHelp: ['device', 'help'] as const,
   familyHelp: (familyId: string) => ['families', familyId, 'help'] as const,
   help: (requestId: string) => ['help', requestId] as const,
+  familyMoments: (familyId: string) => ['families', familyId, 'moments'] as const,
+  moment: (momentId: string) => ['moments', momentId] as const,
+  deviceMoments: ['device', 'moments'] as const,
 };
 
 export function useFamilies() {
@@ -179,4 +182,61 @@ export function useHelpAction(requestId: string, action: 'ack' | 'resolve') {
       void queryClient.invalidateQueries({ queryKey: ['families'] });
     },
   });
+}
+
+/** The family's moments, newest first (first page; enough for the sprint). */
+export function useFamilyMoments(familyId: string) {
+  return useQuery({
+    queryKey: keys.familyMoments(familyId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/families/{family_id}/moments', { params: { path: { family_id: familyId } } }),
+      ),
+    enabled: Boolean(familyId),
+  });
+}
+
+/** The elder's moments feed, with the "new" count. */
+export function useDeviceMoments() {
+  return useQuery({
+    queryKey: keys.deviceMoments,
+    queryFn: () => unwrap(api.GET('/v1/device/moments')),
+  });
+}
+
+/** Hearts and "seen", for family members and elders' phones. */
+export function useMomentActions(asElder: boolean) {
+  const queryClient = useQueryClient();
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: asElder ? ['device'] : ['families'] });
+  const heart = useMutation({
+    mutationFn: ({ id, on }: { id: string; on: boolean }) => {
+      const path = { params: { path: { moment_id: id } } };
+      if (asElder) {
+        return unwrap(
+          on
+            ? api.PUT('/v1/device/moments/{moment_id}/heart', path)
+            : api.DELETE('/v1/device/moments/{moment_id}/heart', path),
+        );
+      }
+      return unwrap(
+        on
+          ? api.PUT('/v1/moments/{moment_id}/heart', path)
+          : api.DELETE('/v1/moments/{moment_id}/heart', path),
+      );
+    },
+    onSuccess: refresh,
+  });
+  const view = useMutation({
+    mutationFn: (id: string) => {
+      const path = { params: { path: { moment_id: id } } };
+      return unwrap(
+        asElder
+          ? api.POST('/v1/device/moments/{moment_id}/view', path)
+          : api.POST('/v1/moments/{moment_id}/view', path),
+      );
+    },
+    onSuccess: refresh,
+  });
+  return { heart, view };
 }

@@ -48,6 +48,19 @@ Target: the Next Gen award. The deadline is 30 Sep, 11:45 PM PDT (1 Oct, 12:15 P
 - the notification buttons
 - a real reminder arriving on the elder's phone at the reminder time
 
+### Day 2 (2026-09-27): S1, Help checks finished ✅
+Verified on two emulators, with build 3 (task manager, image manipulator, battery):
+- **(a)** The family taps "I'm on it" (from the dashboard's red banner → alert screen). The elder's screen switches to "Samuel is on it" within seconds.
+- **(b)** The elder taps "I'm okay now": `POST /v1/device/help/cancel` returns 200, and the family phone gets "Mom is okay now". Tapping that notification opens the alert screen.
+- **(c)** Notification buttons: when the app shows the notification itself (app open), "I'm okay" checks in (`POST /v1/device/checkin` 200). Otherwise Android shows Expo's pushes without buttons, so taps open straight to the one-tap screen: the reminder opens the home with "I'm okay", and the Help alert opens the alert with "I'm on it". Decision recorded as D75.
+- **(d)** A scheduled reminder, set with `python scripts/demo_state.py schedule --elder "Mary Rayan" --remind-in 1`, arrived on the elder emulator on time.
+
+Fixed along the way:
+- A reset day never got its reminder push: notify jobs were deduplicated by elder/day/action. They're now keyed by the engine-action row, with a regression test.
+- The UI-dump test helper could read a stale screen. Not app code.
+
+Also added: `scripts/demo_state.py` (dev only). It moves check-in times to now + N minutes (resetting today) and closes leftover alerts. The leftover Help alert from day 1 is closed.
+
 ### Found today
 - **Hermes on Android has no `Intl.RelativeTimeFormat` (nor `PluralRules`).** "12 minutes ago" is now built from plain strings.
 - **An emulator restored from a quick-boot snapshot lost its display:** every app went black and ours reported an ANR ("no focused window"). A cold boot (`-no-snapshot-load`) fixed it. Use cold boots for now.

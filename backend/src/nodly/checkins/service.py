@@ -128,7 +128,9 @@ async def take_action(
         NOTIFY_JOB,
         {"elder_id": str(elder_id), "local_date": day.isoformat(), "action": action.value},
         run_at=now,
-        idempotency_key=f"{elder_id}:{day.isoformat()}:{action.value}",
+        # One job per ledger row (not per elder/day/action): if a day is ever reset (dev tools,
+        # support), the new action still gets its notification.
+        idempotency_key=f"engine_action:{taken}",
     )
     return True
 

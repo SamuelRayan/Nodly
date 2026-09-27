@@ -52,7 +52,34 @@ export default function Thanks() {
           </View>
         ) : null}
       </View>
-      <Button label={t('elder.back_home')} icon="home" onPress={() => router.back()} />
+      {today.data.new_moments > 0 ? (
+        <View
+          style={{
+            backgroundColor: colors.surface,
+            borderWidth: 1.5,
+            borderColor: colors.border,
+            borderRadius: 28,
+            padding: 20,
+            gap: 18,
+          }}
+        >
+          <T size={22} weight="bold">
+            {t('moments.family_sent', { n: today.data.new_moments })}
+          </T>
+          <Button
+            icon="arrowRight"
+            iconAfter
+            label={t('moments.see_moments')}
+            onPress={() => router.replace('/home/moments')}
+          />
+        </View>
+      ) : null}
+      <Button
+        variant={today.data.new_moments > 0 ? 'plain' : 'primary'}
+        label={t('elder.back_home')}
+        icon="home"
+        onPress={() => router.back()}
+      />
     </Screen>
   );
 }

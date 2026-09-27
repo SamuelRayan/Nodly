@@ -6,7 +6,7 @@ import { View } from 'react-native';
 
 import { serverNow } from '@/api/client';
 import { useCheckIn, useDeviceMe, useDeviceToday } from '@/api/hooks';
-import { DoneCircle, HelpBar, OkayButton } from '@/components/elder';
+import { DoneCircle, HelpBar, OkayButton, Tile } from '@/components/elder';
 import { Avatar, Button, ErrorNote, Loading, Screen, T, Title } from '@/components/ui';
 import { applyLanguage } from '@/i18n';
 import { clockTime, dayPart, joinNames, longDate } from '@/lib/format';
@@ -166,6 +166,13 @@ export default function ElderHome() {
       </View>
 
       <View style={{ gap: 12 }}>
+        <Tile
+          icon="photo"
+          label={t('elder.moments')}
+          badge={day.new_moments > 0 ? t('moments.new_count', { n: day.new_moments }) : undefined}
+          detail={day.new_moments > 0 ? undefined : t('moments.all_seen')}
+          onPress={() => router.push('/home/moments')}
+        />
         <HelpBar
           label={t('elder.help')}
           hint={t('elder.help_hint')}

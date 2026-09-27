@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 
 import type { components } from '@/api/schema';
-import { useFamilies, useFamily, useFamilyHelp } from '@/api/hooks';
+import { useFamilies, useFamily, useFamilyHelp, useFamilyMoments } from '@/api/hooks';
 import { useMe } from '@/auth/session';
 import { Icon } from '@/components/icons';
 import { ElderCard } from '@/components/family';
 import { Avatar, Body, Button, Card, ErrorNote, Loading, Screen, T, Title } from '@/components/ui';
-import { dayPart, longDate } from '@/lib/format';
+import { clockTime, dayPart, localDateIn, longDate } from '@/lib/format';
 import { deviceTimezone } from '@/components/pickers';
 import { useTheme } from '@/theme';
 
@@ -54,6 +54,63 @@ function HelpBanners({ familyId }: { familyId: string }) {
   );
 }
 
+/** "Today's moment" on the family clock (F2): shared (and counting) or not yet. */
+function TodaysMoment({ familyId, timezone }: { familyId: string; timezone: string }) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const moments = useFamilyMoments(familyId);
+  const today = localDateIn(timezone);
+  const counted = moments.data?.items.find(
+    (moment) => moment.qualifies && moment.qualifying_local_date === today,
+  );
+  return (
+    <View style={{ gap: 10 }}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push({ pathname: '/share', params: { familyId } })}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 14,
+          padding: 16,
+          borderRadius: 20,
+          backgroundColor: counted ? colors.okTint : colors.sand,
+        }}
+      >
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: counted ? colors.ok : colors.accent,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name={counted ? 'check' : 'photo'} size={22} color={counted ? colors.onOk : colors.onAccent} />
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <T size={17} weight="bold">
+            {t('moments.today_title')}
+          </T>
+          <T size={15} color={counted ? colors.okText : colors.onSand}>
+            {counted
+              ? t('moments.today_done', { time: clockTime(counted.intent_at, timezone) })
+              : t('moments.today_none')}
+          </T>
+        </View>
+        <Icon name="chevronRight" size={22} color={colors.textMuted} />
+      </Pressable>
+      <Button
+        variant="secondary"
+        icon="photo"
+        label={t('moments.see_all')}
+        onPress={() => router.push({ pathname: '/moments', params: { familyId } })}
+      />
+    </View>
+  );
+}
+
 /** Each family's elders, with today's check-in (design F2, F9, F10). */
 function FamilySection({ family, showName }: { family: FamilySummary; showName: boolean }) {
   const { t } = useTranslation();
@@ -71,6 +128,9 @@ function FamilySection({ family, showName }: { family: FamilySummary; showName: 
       {detail.data.elders.map((elder) => (
         <ElderCard key={elder.id} elder={elder} />
       ))}
+      {detail.data.clock ? (
+        <TodaysMoment familyId={family.id} timezone={detail.data.clock.timezone} />
+      ) : null}
       {detail.data.elders.length === 0 ? (
         <Card>
           <Body>{t('family.no_elders_yet')}</Body>
