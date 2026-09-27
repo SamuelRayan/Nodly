@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 
+import { forgetBillingUser } from '@/billing/revenuecat';
 import { api, unwrap } from '@/api/client';
 import { unregisterUserPush } from '@/push/notifications';
 
@@ -32,6 +33,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await unregisterUserPush();
+    await forgetBillingUser();
     await supabase.auth.signOut();
     queryClient.clear();
   };

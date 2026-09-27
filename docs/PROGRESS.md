@@ -106,6 +106,26 @@ Also added: `scripts/demo_state.py` (dev only). It moves check-in times to now +
   - The "Counts for today" pill on Share is centred.
 - **Not done:** video moments. They're first in the cut order, and S4 (billing) matters more for Next Gen.
 
+### Day 2 (2026-09-27): S4, billing core (backend ✅, app ✅, live purchase waiting for keys)
+- **Backend** (D77):
+  - the `access_grants` ledger and one `evaluate_access`
+  - moment credits for D and D+1 on the family clock, granted with the moment's verdict; today's credits backfilled
+  - Day Passes and subscription periods only from RevenueCat: the webhook (Authorization header, optional HMAC, each event once) or `POST /access/refresh` (REST v1, secret key)
+  - refunds revoke, even when they arrive before the purchase
+  - `GET /access` (Plus, why, until when, today's moment, the Day Pass offer) and day-pass eligibility
+  - the Plus-gated 30-day check-in history (7 days free)
+  - 20 billing tests (Kolkata, New York and Berlin DST days, Santiago's skipped midnight, Chatham); 433 backend tests pass
+- **App:**
+  - RevenueCat in family mode only (Test Store key in dev builds only); elder screens can't import purchase code (ESLint rule)
+  - "See 30 days" on each elder's week strip opens the history
+  - without Plus: the 7 free days, and the F8 sheet opens (Share a moment — free, Day Pass, Nodly Plus, Restore)
+  - after a purchase: "Confirming…" until the server says Plus is on
+- **Checked on the family emulator:**
+  - with today's moment credit: "Plus is on · Free today and tomorrow: a moment was shared" and all 30 days
+  - with the grant revoked for a minute (dev DB, then restored): the 7 free days, and the sheet opened
+- **Fixed:** the history screen looped. The sheet's access query refetched on mount, and the page showed its spinner while fetching, which unmounted the sheet, and so on. The page now waits only for an answer newer than when it opened.
+- **Waiting on you:** the RevenueCat project, products and keys. Then: a Test Store Day Pass on the emulator → "Confirming…" → unlocked by the server.
+
 ### Found today
 - **Hermes on Android has no `Intl.RelativeTimeFormat` (nor `PluralRules`).** "12 minutes ago" is now built from plain strings.
 - **An emulator restored from a quick-boot snapshot lost its display:** every app went black and ours reported an ANR ("no focused window"). A cold boot (`-no-snapshot-load`) fixed it. Use cold boots for now.

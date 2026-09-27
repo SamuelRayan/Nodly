@@ -395,5 +395,43 @@
     "pause": "Pause",
     "record_voice": "Record a voice note",
     "play_yours": "Play your voice note"
+  },
+  "plus": {
+    "history_title": "{{name}}’s last 30 days are part of Plus",
+    "line": "Share one moment a day and Plus stays free. Or pick a pass.",
+    "share": "Share a moment",
+    "share_detail": "A photo or a voice note",
+    "free": "Free",
+    "day_pass": "Day Pass",
+    "day_pass_detail": "Everything in Plus for 24 hours",
+    "day_pass_pending": "Your moment is on its way. It unlocks today when it arrives.",
+    "plus": "Nodly Plus",
+    "plus_detail": "Never locked. Cancel anytime.",
+    "per_month": "{{price}}/mo",
+    "per_year": "{{price}}/yr",
+    "not_offered": "Not available right now",
+    "unavailable": "Purchases aren’t available in this build.",
+    "never_locked": "Check-ins and Help alerts are never locked.",
+    "restore": "Restore purchases",
+    "not_now": "Not now",
+    "confirming_title": "Confirming with the store…",
+    "confirming_line": "This takes a few seconds. Plus switches on as soon as it’s confirmed.",
+    "waiting_title": "Still confirming",
+    "waiting_line": "The store hasn’t confirmed it yet. Plus switches on by itself once it does.",
+    "check_again": "Check again",
+    "on": "Plus is on",
+    "on_moment": "Free today and tomorrow: a moment was shared.",
+    "on_day_pass": "Day Pass until {{time}}",
+    "on_subscription": "Nodly Plus",
+    "on_goodwill": "On us until {{time}}",
+    "unlock_month": "See all 30 days",
+    "month_locked_line": "The last 7 days are always free. The whole month comes with Plus."
+  },
+  "history": {
+    "title": "Check-ins",
+    "month": "Last 30 days",
+    "week": "Last 7 days",
+    "summary": "Checked in on {{n}} of {{total}} days",
+    "see_month": "See 30 days"
   }
 }

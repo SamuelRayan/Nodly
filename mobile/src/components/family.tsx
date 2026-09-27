@@ -42,14 +42,27 @@ function StatusPill({ status }: { status: Status['status'] }) {
 }
 
 /** The last 7 days: filled = okay, dashed = missed, today ringed. */
-function WeekStrip({ week }: { week: Status['week'] }) {
+function WeekStrip({ week, onMore }: { week: Status['week']; onMore: () => void }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   return (
     <View style={{ gap: 8 }}>
-      <T size={14} weight="bold" color={colors.textMuted}>
-        {t('checkin.this_week')}
-      </T>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <T size={14} weight="bold" color={colors.textMuted}>
+          {t('checkin.this_week')}
+        </T>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onMore}
+          hitSlop={12}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
+        >
+          <T size={14} weight="bold" color={colors.okText}>
+            {t('history.see_month')}
+          </T>
+          <Icon name="chevronRight" size={16} color={colors.okText} />
+        </Pressable>
+      </View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         {week.map((day, index) => {
           const today = index === week.length - 1;
@@ -152,7 +165,14 @@ export function ElderCard({ elder }: { elder: Elder }) {
 
       <ErrorNote error={status.error ?? markOkay.error ?? ack.error} />
       {s ? <TodayPanel status={s} name={name} tz={tz} /> : null}
-      {s && s.status !== 'no_phone' ? <WeekStrip week={s.week} /> : null}
+      {s && s.status !== 'no_phone' ? (
+        <WeekStrip
+          week={s.week}
+          onMore={() =>
+            router.push({ pathname: '/elder/[elderId]/history', params: { elderId: elder.id } })
+          }
+        />
+      ) : null}
 
       {s?.status === 'missed' && !s.alert?.acked_at ? (
         <Button variant="help" label={t('checkin.on_it')} busy={ack.isPending} onPress={() => ack.mutate()} />

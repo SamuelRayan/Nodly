@@ -18,6 +18,8 @@ export const keys = {
   familyMoments: (familyId: string) => ['families', familyId, 'moments'] as const,
   moment: (momentId: string) => ['moments', momentId] as const,
   deviceMoments: ['device', 'moments'] as const,
+  access: (familyId: string) => ['families', familyId, 'access'] as const,
+  history: (elderId: string, days: number) => ['elders', elderId, 'history', days] as const,
 };
 
 export function useFamilies() {
@@ -239,4 +241,37 @@ export function useMomentActions(asElder: boolean) {
     onSuccess: refresh,
   });
   return { heart, view };
+}
+
+/** Nodly Plus for a family, as the server decides it (§10). The app never decides. */
+export function useAccess(familyId: string | undefined) {
+  return useQuery({
+    queryKey: keys.access(familyId ?? ''),
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/families/{family_id}/access', {
+          params: { path: { family_id: familyId ?? '' } },
+        }),
+      ),
+    enabled: Boolean(familyId),
+    // Always ask again when a screen opens: Plus can start or end at any minute.
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+}
+
+/** Check-in history by day; beyond 7 days the server asks for Plus (403 plus_required). */
+export function useCheckinHistory(elderId: string, days: number, enabled = true) {
+  return useQuery({
+    queryKey: keys.history(elderId, days),
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/elders/{elder_id}/checkins/history', {
+          params: { path: { elder_id: elderId }, query: { days } },
+        }),
+      ),
+    enabled,
+    retry: false,
+    staleTime: 0,
+  });
 }
