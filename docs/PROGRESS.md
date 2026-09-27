@@ -106,7 +106,7 @@ Also added: `scripts/demo_state.py` (dev only). It moves check-in times to now +
   - The "Counts for today" pill on Share is centred.
 - **Not done:** video moments. They're first in the cut order, and S4 (billing) matters more for Next Gen.
 
-### Day 2 (2026-09-27): S4, billing core (backend ✅, app ✅, live purchase waiting for keys)
+### Day 2–3 (2026-09-27/28): S4, billing core ✅
 - **Backend** (D77):
   - the `access_grants` ledger and one `evaluate_access`
   - moment credits for D and D+1 on the family clock, granted with the moment's verdict; today's credits backfilled
@@ -124,7 +124,14 @@ Also added: `scripts/demo_state.py` (dev only). It moves check-in times to now +
   - with today's moment credit: "Plus is on · Free today and tomorrow: a moment was shared" and all 30 days
   - with the grant revoked for a minute (dev DB, then restored): the 7 free days, and the sheet opened
 - **Fixed:** the history screen looped. The sheet's access query refetched on mount, and the page showed its spinner while fetching, which unmounted the sheet, and so on. The page now waits only for an answer newer than when it opened.
-- **Waiting on you:** the RevenueCat project, products and keys. Then: a Test Store Day Pass on the emulator → "Confirming…" → unlocked by the server.
+- **RevenueCat set up** (by you): project Nodly, entitlement `plus`, `day_pass` (consumable, not attached), `plus_monthly` and `plus_annual` (attached), offering `default`. Keys in the git-ignored `.env` files.
+- **Test Store Day Pass, verified on the family emulator** (Demo family's moment credit paused for the test, then restored):
+  - before: the server had no grant and no purchase; the sheet showed Day Pass $2.99 and Nodly Plus $6.99/mo from the offering
+  - Cancel in the Test Store dialog: back to the sheet, nothing recorded
+  - "Test valid purchase": the app made one `/access/refresh` (200). The server asked RevenueCat and recorded the purchase (`TEST_STORE`, `SANDBOX`, source `refresh`, RevenueCat's time 19:36:49Z) with a grant of exactly 24 h. The history switched to "Plus is on · Day Pass until Sep 29, 1:06 AM" (IST) and all 30 days.
+  - RevenueCat's REST record carries `store_transaction_id`, the id webhooks send too, so a later webhook matches the same row
+  - two more refreshes against real RevenueCat: still one purchase, one grant
+  - RevenueCat confirmed on the first refresh, so "Confirming…" was on screen too briefly to capture
 
 ### Found today
 - **Hermes on Android has no `Intl.RelativeTimeFormat` (nor `PluralRules`).** "12 minutes ago" is now built from plain strings.
