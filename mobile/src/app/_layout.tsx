@@ -1,4 +1,6 @@
 import '@/i18n';
+// Defines and registers the notification-button task at startup (it must run early).
+import '@/push/background';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { SplashScreen, Stack } from 'expo-router';

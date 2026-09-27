@@ -228,7 +228,9 @@
     "start": "Start",
     "help": "Help",
     "help_hint": "Alerts your family",
-    "moments": "Moments"
+    "moments": "Moments",
+    "thanks_short_title": "Thank you!",
+    "thanks_short_body": "Your family can see you’re okay today."
   },
   "checkin": {
     "status_okay": "Okay today",
@@ -308,7 +310,9 @@
     "test_send": "Send a test alert",
     "test_explain": "Checks that everyone’s phone rings. It’s clearly labelled as a test.",
     "test_sent": "Test alert sent to everyone in the family.",
-    "battery": "Battery {{percent}}%"
+    "battery": "Battery {{percent}}%",
+    "on_it_done_title": "You’re on it",
+    "on_it_done_body": "The family has been told you’re handling it."
   },
   "time": {
     "just_now": "just now",
@@ -316,5 +320,9 @@
     "minutes_ago": "{{n}} minutes ago",
     "hour_ago": "{{n}} hour ago",
     "hours_ago": "{{n}} hours ago"
+  },
+  "push": {
+    "action_failed_title": "That didn’t go through",
+    "action_failed_body": "Open Nodly and try again."
   }
 }

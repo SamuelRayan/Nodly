@@ -54,9 +54,9 @@ export async function ensureChannels(): Promise<void> {
 }
 
 /**
- * Action buttons, matched by the backend's categoryId. Buttons open the app, which then acts
- * (a check-in, an "I'm on it"): simpler and more reliable than headless background handling.
- * Identifiers must not contain ":" or "-" (Expo docs).
+ * Action buttons, matched by the backend's categoryId. They act without opening the app: on
+ * Android a background task handles the tap (push/background.ts). Identifiers must not contain
+ * ":" or "-" (Expo docs).
  */
 export async function ensureCategories(): Promise<void> {
   await Promise.all([
@@ -64,14 +64,14 @@ export async function ensureCategories(): Promise<void> {
       {
         identifier: 'im_okay',
         buttonTitle: i18n.t('elder.okay'),
-        options: { opensAppToForeground: true },
+        options: { opensAppToForeground: false },
       },
     ]),
     Notifications.setNotificationCategoryAsync('help_alert', [
       {
         identifier: 'on_it',
         buttonTitle: i18n.t('help.on_it'),
-        options: { opensAppToForeground: true },
+        options: { opensAppToForeground: false },
       },
     ]),
   ]);
