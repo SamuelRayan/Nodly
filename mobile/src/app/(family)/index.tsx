@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 
 import type { components } from '@/api/schema';
-import { useFamilies, useFamily, useFamilyHelp, useFamilyMoments } from '@/api/hooks';
+import { useAccess, useFamilies, useFamily, useFamilyHelp, useFamilyMoments } from '@/api/hooks';
 import { useMe } from '@/auth/session';
 import { Icon } from '@/components/icons';
 import { ElderCard } from '@/components/family';
 import { Avatar, Body, Button, Card, ErrorNote, Loading, Screen, T, Title } from '@/components/ui';
-import { clockTime, dayPart, localDateIn, longDate } from '@/lib/format';
+import { clockTime, dayPart, dateTime, localDateIn, longDate, timeLeftToday } from '@/lib/format';
 import { deviceTimezone } from '@/components/pickers';
 import { useTheme } from '@/theme';
 
@@ -59,10 +59,25 @@ function TodaysMoment({ familyId, timezone }: { familyId: string; timezone: stri
   const { t } = useTranslation();
   const { colors } = useTheme();
   const moments = useFamilyMoments(familyId);
+  const access = useAccess(familyId);
   const today = localDateIn(timezone);
   const counted = moments.data?.items.find(
     (moment) => moment.qualifies && moment.qualifying_local_date === today,
   );
+  const hasPlus = access.data?.has_plus ?? false;
+  const plusUntil = access.data?.plus_until;
+
+  // Plus status line (S5): once we know, say either how long it's covered, or how long is
+  // left today to earn it for free. Never blocks the card on the access call.
+  let statusLine: string | null = null;
+  if (access.data) {
+    if (hasPlus && plusUntil) {
+      statusLine = t('moments.today_plus_on', { time: dateTime(plusUntil, timezone) });
+    } else if (!hasPlus) {
+      statusLine = timeLeftToday(timezone);
+    }
+  }
+
   return (
     <View style={{ gap: 10 }}>
       <Pressable
@@ -98,6 +113,11 @@ function TodaysMoment({ familyId, timezone }: { familyId: string; timezone: stri
               ? t('moments.today_done', { time: clockTime(counted.intent_at, timezone) })
               : t('moments.today_none')}
           </T>
+          {statusLine ? (
+            <T size={13} color={counted ? colors.okText : colors.onSand}>
+              {statusLine}
+            </T>
+          ) : null}
         </View>
         <Icon name="chevronRight" size={22} color={colors.textMuted} />
       </Pressable>
@@ -107,6 +127,16 @@ function TodaysMoment({ familyId, timezone }: { familyId: string; timezone: stri
         label={t('moments.see_all')}
         onPress={() => router.push({ pathname: '/moments', params: { familyId } })}
       />
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push({ pathname: '/billing', params: { familyId } })}
+        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, minHeight: 44 }}
+      >
+        <T size={14} weight="bold" color={colors.textMuted}>
+          {t('plus.view_billing')}
+        </T>
+        <Icon name="chevronRight" size={16} color={colors.textMuted} />
+      </Pressable>
     </View>
   );
 }

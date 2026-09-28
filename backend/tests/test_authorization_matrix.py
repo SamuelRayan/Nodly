@@ -604,6 +604,13 @@ CASES = [
     # No RevenueCat key in these settings: members get through to 503 billing_not_configured.
     Case("POST", "/v1/families/{family_id}/access/refresh", family_a(member=503, organizer=503)),
     Case("GET", "/v1/elders/{elder_id}/checkins/history", family_a(member=200, organizer=200)),
+    Case("GET", "/v1/families/{family_id}/billing/timeline", family_a(member=200, organizer=200)),
+    Case(
+        "POST",
+        "/v1/families/{family_id}/billing/report",
+        family_a(member=201, organizer=201),
+        body={"reason": "other", "message": "test"},
+    ),
     # Only RevenueCat, by the Authorization header from its dashboard (none configured here).
     Case("POST", "/v1/billing/revenuecat/webhook", public(401), body={"event": {"id": "e"}}),
 ]

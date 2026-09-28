@@ -114,6 +114,29 @@ class AccessGrant(UUIDPrimaryKey, CreatedAt, Base):
     revoke_reason: Mapped[str | None] = mapped_column(Text)
 
 
+class ReportReason(StrEnum):
+    wrong_charge = "wrong_charge"
+    plus_not_working = "plus_not_working"
+    missing_purchase = "missing_purchase"
+    other = "other"
+
+
+class BillingReport(UUIDPrimaryKey, CreatedAt, Base):
+    """ "Report a problem" on the billing timeline (§10). No workflow yet (Next Gen scope):
+    it's stored so support can find it, and logged to the audit trail when it's filed."""
+
+    __tablename__ = "billing_reports"
+    __table_args__ = (
+        one_of("reason", ReportReason, "reason"),
+        Index("ix_billing_reports_family_id_created_at", "family_id", "created_at"),
+    )
+
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"))
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    reason: Mapped[str] = mapped_column(Text)
+    message: Mapped[str | None] = mapped_column(Text)
+
+
 class RevenueCatEvent(Base):
     """Every webhook delivery we accepted, once (RevenueCat retries reuse the event id)."""
 

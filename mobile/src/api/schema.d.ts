@@ -897,6 +897,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/families/{family_id}/billing/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Billing Timeline
+         * @description "Why do I have / not have Plus, what was charged, when" (§10).
+         */
+        get: operations["get_billing_timeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/families/{family_id}/billing/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report Billing Problem
+         * @description "Report a problem" on the billing timeline (§10): stored, and logged to the audit
+         *     trail. No automatic action; a person follows up.
+         */
+        post: operations["report_billing_problem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/billing/revenuecat/webhook": {
         parameters: {
             query?: never;
@@ -1273,6 +1314,16 @@ export interface components {
             acked_by_name: string | null;
             /** Resolved At */
             resolved_at: string | null;
+        };
+        /** BillingTimelineOut */
+        BillingTimelineOut: {
+            /** @description Why Plus is (or isn't) on right now */
+            access: components["schemas"]["AccessOut"];
+            /**
+             * Entries
+             * @description Newest first
+             */
+            entries: components["schemas"]["TimelineEntryOut"][];
         };
         /** CheckinOut */
         CheckinOut: {
@@ -2276,6 +2327,31 @@ export interface components {
              */
             at: string;
         };
+        /** ReportIn */
+        ReportIn: {
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "wrong_charge" | "plus_not_working" | "missing_purchase" | "other";
+            /** Message */
+            message?: string | null;
+        };
+        /** ReportOut */
+        ReportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** ResolveIn */
         ResolveIn: {
             /** Note */
@@ -2321,6 +2397,61 @@ export interface components {
          * @enum {string}
          */
         SuggestionReason: "device" | "phone_number" | "phone_country";
+        /** TimelineEntryOut */
+        TimelineEntryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Source
+             * @description moment | day_pass | subscription | goodwill
+             */
+            source: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Revoke Reason */
+            revoke_reason: string | null;
+            /**
+             * Note
+             * @description A goodwill grant's note, if any
+             */
+            note: string | null;
+            /**
+             * Moment Kind
+             * @description source == moment: photo | voice | video
+             */
+            moment_kind: string | null;
+            /** Moment Author Name */
+            moment_author_name: string | null;
+            /**
+             * Product Id
+             * @description source in (day_pass, subscription)
+             */
+            product_id: string | null;
+            /** Store */
+            store: string | null;
+            /**
+             * Environment
+             * @description SANDBOX | PRODUCTION
+             */
+            environment: string | null;
+            /** Purchased At */
+            purchased_at: string | null;
+            /** Refunded At */
+            refunded_at: string | null;
+        };
         /** TimezoneListOut */
         TimezoneListOut: {
             /**
@@ -5924,6 +6055,144 @@ export interface operations {
                 };
             };
             /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_billing_timeline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingTimelineOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, ...) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Sign-in unavailable (`auth_unavailable`, `auth_not_configured`) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    report_billing_problem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportOut"];
+                };
+            };
+            /** @description Missing, invalid or expired credentials (`not_authenticated`, `invalid_token`, `token_expired`, `device_revoked`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Signed in but not allowed (`onboarding_required`, `organizer_required`, ...) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found, or not visible to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid input (`validation_error`, `invalid_code`, ...) */
             422: {
                 headers: {
                     [name: string]: unknown;

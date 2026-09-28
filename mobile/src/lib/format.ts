@@ -87,3 +87,47 @@ export function duration(ms: number): string {
   const seconds = Math.max(0, Math.floor(ms / 1000));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 }
+
+/** Minutes east of UTC for `timeZone` at `at` (e.g. 330 for +05:30). */
+function offsetMinutes(timeZone: string, at: Date): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(at);
+  const get = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? 0);
+  const asIfUtc = Date.UTC(
+    get('year'),
+    get('month') - 1,
+    get('day'),
+    get('hour'),
+    get('minute'),
+    get('second'),
+  );
+  return Math.round((asIfUtc - at.getTime()) / 60_000);
+}
+
+/** Milliseconds left until local midnight in `timeZone` — the end of "today" on the family
+ * clock (§10). An approximation from the current UTC offset: fine for a display hint (it can
+ * be an hour off on the very day the clock changes); the server alone decides what counts. */
+export function msUntilLocalMidnight(timeZone: string, at: Date = new Date(serverNow())): number {
+  const offset = offsetMinutes(timeZone, at);
+  const [year, month, day] = localDateIn(timeZone, at).split('-').map(Number);
+  const nextMidnightUtc = Date.UTC(year, month - 1, day + 1, 0, 0, 0) - offset * 60_000;
+  return Math.max(0, nextMidnightUtc - at.getTime());
+}
+
+/** "6h left today", "45m left today" — how long until the family-clock day ends. */
+export function timeLeftToday(timeZone: string, at: Date = new Date(serverNow())): string {
+  const ms = msUntilLocalMidnight(timeZone, at);
+  const hours = Math.floor(ms / 3_600_000);
+  const minutes = Math.max(1, Math.round((ms % 3_600_000) / 60_000));
+  return hours > 0
+    ? i18n.t('moments.time_left_hours', { h: hours })
+    : i18n.t('moments.time_left_minutes', { m: minutes });
+}

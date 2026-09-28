@@ -133,6 +133,24 @@ Also added: `scripts/demo_state.py` (dev only). It moves check-in times to now +
   - two more refreshes against real RevenueCat: still one purchase, one grant
   - RevenueCat confirmed on the first refresh, so "Confirming…" was on screen too briefly to capture
 
+### Day 3 (2026-09-28): S5, billing checks + screens ✅
+- **Backend:**
+  - `GET /families/{id}/billing/timeline`: the access verdict plus every grant, newest first, each explained (a moment's author and kind, or a purchase's product/store/environment/price-free display), with refunds and revocations shown
+  - `POST /families/{id}/billing/report` ("Report a problem", CLAUDE.md §10): stored in a new `billing_reports` table and written to the audit log; no workflow yet (no admin queue — out of scope for Next Gen)
+  - `billing_reports` table (migration 0009), a `ReportReason` enum (wrong_charge, plus_not_working, missing_purchase, other)
+  - both endpoints are family-members-only, same as the rest of billing; 11 new tests, 440 backend tests pass
+- **App:**
+  - "Plus & billing" screen: the current status, a timeline card per grant (icon by kind, the window in the family's local time, a "Test purchase" tag for sandbox rows, refund/end-early notes), and Report a problem
+  - Report a problem is a bottom sheet (radio reasons + an optional message) ending in "Thanks — we've got it"
+  - dashboard: the "Today's moment" card now also says how long is left today to share for free, or until when Plus already covers the family, plus a "Plus & billing" link
+- **Verified on the family emulator, each flow twice from a fresh launch:**
+  - **Locked → sheet → "Share a moment — free" → post → unlocked.** (First try's camera photo was a near-duplicate of an earlier test shot and correctly didn't count — a real photo from the gallery did.)
+  - **Locked → Day Pass (Test Store) → "Confirming…" → unlocked.** Also checked "Test failed purchase": a plain error, sheet stays open, nothing recorded.
+  - **Restore purchases:** with the local purchase and grant deleted (simulating a fresh install), tapping Restore re-derived the exact same grant from RevenueCat's own record.
+  - Confirmed nothing about payments appears in elder mode (grep + the existing ESLint rule).
+- **Fixed:** none — the one scare (Plus reading "on" when the DB showed no grant) turned out to be my own test mistake, tapping the Rayan family's "See 30 days" instead of Demo family's after the dashboard's layout shifted; Rayan family genuinely had an untouched moment credit from S3 testing. No app bug.
+- **Test-methodology note for next time:** revoking a moment-source `access_grant` by hand (to simulate "locked") leaves a row that blocks the `(family_id, local_date)` unique index, so a fresh qualifying moment for that same day silently fails to grant. Real code never revokes a moment grant (the overlap detector that would is deferred, D77), so this can't happen from the app — but a dev script for "revoke for testing" should `DELETE`, not revoke, moment-source rows.
+
 ### Found today
 - **Hermes on Android has no `Intl.RelativeTimeFormat` (nor `PluralRules`).** "12 minutes ago" is now built from plain strings.
 - **An emulator restored from a quick-boot snapshot lost its display:** every app went black and ours reported an ANR ("no focused window"). A cold boot (`-no-snapshot-load`) fixed it. Use cold boots for now.

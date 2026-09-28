@@ -17,7 +17,15 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 import nodly.billing.revenuecat
 from nodly.billing.access import evaluate_access, moment_credit_window
 from nodly.config import Settings
-from nodly.models import AccessGrant, Checkin, FamilyRole, Purchase, RevenueCatEvent
+from nodly.models import (
+    AccessGrant,
+    AuditLog,
+    BillingReport,
+    Checkin,
+    FamilyRole,
+    Purchase,
+    RevenueCatEvent,
+)
 from tests.conftest import TEST_SUPABASE_URL, app_client, make_settings
 from tests.fake_supabase import FakeSupabase, SupabaseUser
 from tests.support import make_family, make_member
@@ -559,3 +567,137 @@ async def test_history_beyond_a_week_needs_plus(
     month = await ok(await history(30))
     assert len(month["days"]) == 30 and month["days"][0]["local_date"] == "2026-08-28"
     assert {"local_date": "2026-09-10", "state": "okay"} in month["days"]
+
+
+# ---------------------------------------------------------------- the billing timeline
+
+
+async def test_the_timeline_explains_every_grant(
+    api: httpx.AsyncClient,
+    session: AsyncSession,
+    clean_db: AsyncEngine,
+    settings: Settings,
+    fake_supabase: FakeSupabase,
+    revenuecat: FakeRevenueCat,
+) -> None:
+    home, priya, arjun = await signed_in_home(session, fake_supabase)
+    await share(api, home, priya, photo(21))  # a moment credit
+    await run_jobs(clean_db, settings)
+    revenuecat.day_pass("tx-timeline", T)
+    await refresh(api, home, arjun)  # a Day Pass
+    session.add(
+        AccessGrant(
+            family_id=home.family.id,
+            source="goodwill",
+            starts_at=T - timedelta(days=1),
+            ends_at=T,
+            note="Sorry about the mix-up",
+        )
+    )
+    await session.commit()
+
+    with time_machine.travel(T, tick=False):
+        timeline = await ok(
+            await api.get(f"/v1/families/{home.family.id}/billing/timeline", headers=priya.headers)
+        )
+    assert timeline["access"]["has_plus"] is True
+    entries = timeline["entries"]
+    assert [e["source"] for e in entries] == ["day_pass", "moment", "goodwill"]  # newest first
+
+    day_pass = entries[0]
+    assert (day_pass["product_id"], day_pass["store"], day_pass["environment"]) == (
+        "day_pass",
+        "TEST_STORE",
+        "SANDBOX",
+    )
+    assert day_pass["purchased_at"] is not None and day_pass["moment_author_name"] is None
+
+    moment = entries[1]
+    assert (moment["moment_kind"], moment["moment_author_name"]) == ("photo", "Priya Rayan")
+    assert moment["product_id"] is None
+
+    goodwill = entries[2]
+    assert goodwill["note"] == "Sorry about the mix-up" and goodwill["revoked_at"] is None
+
+
+async def test_a_refund_shows_on_the_timeline(
+    api: httpx.AsyncClient, session: AsyncSession, fake_supabase: FakeSupabase
+) -> None:
+    home, priya, _ = await signed_in_home(session, fake_supabase)
+    await ok(
+        await hook(api, event("NON_RENEWING_PURCHASE", home.member.id, transaction_id="tx-tl"))
+    )
+    refund = event(
+        "CANCELLATION", home.member.id, transaction_id="tx-tl", cancel_reason="CUSTOMER_SUPPORT"
+    )
+    await ok(await hook(api, refund))
+    [entry] = (
+        await ok(
+            await api.get(f"/v1/families/{home.family.id}/billing/timeline", headers=priya.headers)
+        )
+    )["entries"]
+    assert entry["revoke_reason"] == "refunded" and entry["revoked_at"] is not None
+    assert entry["refunded_at"] is not None
+
+
+async def test_an_elders_phone_never_sees_the_timeline(
+    api: httpx.AsyncClient, session: AsyncSession, fake_supabase: FakeSupabase
+) -> None:
+    home, _, _ = await signed_in_home(session, fake_supabase)
+    response = await api.get(
+        f"/v1/families/{home.family.id}/billing/timeline", headers=device_headers(home)
+    )
+    assert response.status_code == 401
+
+
+# ---------------------------------------------------------------- reporting a problem
+
+
+async def test_reporting_a_problem_is_stored_and_logged(
+    api: httpx.AsyncClient, session: AsyncSession, fake_supabase: FakeSupabase
+) -> None:
+    home, priya, _ = await signed_in_home(session, fake_supabase)
+    reported = await ok(
+        await api.post(
+            f"/v1/families/{home.family.id}/billing/report",
+            headers=priya.headers,
+            json={"reason": "wrong_charge", "message": "I was charged twice"},
+        ),
+        201,
+    )
+    assert reported["reason"] == "wrong_charge"
+    stored = await session.get(BillingReport, uuid.UUID(reported["id"]))
+    assert stored is not None
+    assert (stored.family_id, stored.user_id, stored.message) == (
+        home.family.id,
+        home.organizer.id,
+        "I was charged twice",
+    )
+
+    logged = await session.scalar(
+        select(func.count()).select_from(AuditLog).where(AuditLog.action == "billing.report")
+    )
+    assert logged == 1
+
+    # A message is optional.
+    minimal = await ok(
+        await api.post(
+            f"/v1/families/{home.family.id}/billing/report",
+            headers=priya.headers,
+            json={"reason": "other"},
+        ),
+        201,
+    )
+    assert minimal["reason"] == "other"
+
+
+async def test_an_elders_phone_cant_report_a_problem(
+    api: httpx.AsyncClient, session: AsyncSession, fake_supabase: FakeSupabase
+) -> None:
+    home, _, _ = await signed_in_home(session, fake_supabase)
+    response = await api.post(
+        f"/v1/families/{home.family.id}/billing/report",
+        headers=device_headers(home),
+        json={"reason": "other"},
+    )
+    assert response.status_code == 401

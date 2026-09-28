@@ -20,6 +20,7 @@ export const keys = {
   deviceMoments: ['device', 'moments'] as const,
   access: (familyId: string) => ['families', familyId, 'access'] as const,
   history: (elderId: string, days: number) => ['elders', elderId, 'history', days] as const,
+  billingTimeline: (familyId: string) => ['families', familyId, 'billing', 'timeline'] as const,
 };
 
 export function useFamilies() {
@@ -273,5 +274,34 @@ export function useCheckinHistory(elderId: string, days: number, enabled = true)
     enabled,
     retry: false,
     staleTime: 0,
+  });
+}
+
+/** "Why do I have / not have Plus, what was charged, when" (§10). */
+export function useBillingTimeline(familyId: string | undefined) {
+  return useQuery({
+    queryKey: keys.billingTimeline(familyId ?? ''),
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/families/{family_id}/billing/timeline', {
+          params: { path: { family_id: familyId ?? '' } },
+        }),
+      ),
+    enabled: Boolean(familyId),
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+}
+
+/** "Report a problem" on the billing timeline: stored, and logged (§10). */
+export function useReportProblem(familyId: string) {
+  return useMutation({
+    mutationFn: (body: { reason: 'wrong_charge' | 'plus_not_working' | 'missing_purchase' | 'other'; message?: string }) =>
+      unwrap(
+        api.POST('/v1/families/{family_id}/billing/report', {
+          params: { path: { family_id: familyId } },
+          body,
+        }),
+      ),
   });
 }

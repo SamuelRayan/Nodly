@@ -3,10 +3,12 @@
 from nodly.models.base import Base
 from nodly.models.billing import (
     AccessGrant,
+    BillingReport,
     GrantSource,
     Purchase,
     PurchaseKind,
     PurchaseSource,
+    ReportReason,
     RevenueCatEvent,
 )
 from nodly.models.checkins import (
@@ -43,6 +45,7 @@ __all__ = [
     "AlertResolution",
     "AuditLog",
     "Base",
+    "BillingReport",
     "Checkin",
     "CheckinAlert",
     "CheckinSource",
@@ -74,6 +77,7 @@ __all__ = [
     "PurchaseSource",
     "PushProvider",
     "PushToken",
+    "ReportReason",
     "RevenueCatEvent",
     "ThrottleCounter",
     "User",
